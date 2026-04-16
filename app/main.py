@@ -48,9 +48,9 @@ async def home(request: Request):
             }
 
     return templates.TemplateResponse(
+        request,
         "index.html",
         {
-            "request": request,
             "providers": providers,
             "user": user,
             "app_name": settings.APP_NAME,
@@ -64,9 +64,9 @@ async def profile(request: Request):
     session_id = request.cookies.get("session_id")
     if not session_id:
         return templates.TemplateResponse(
+            request,
             "error.html",
             {
-                "request": request,
                 "error": "Not logged in",
                 "message": "You need to login first. Go back to the home page and click a login button.",
                 "app_name": settings.APP_NAME,
@@ -76,9 +76,9 @@ async def profile(request: Request):
     session = store.get_session(session_id)
     if not session:
         return templates.TemplateResponse(
+            request,
             "error.html",
             {
-                "request": request,
                 "error": "Session expired",
                 "message": "Your session has expired. Please login again.",
                 "app_name": settings.APP_NAME,
@@ -86,9 +86,9 @@ async def profile(request: Request):
         )
 
     return templates.TemplateResponse(
+        request,
         "profile.html",
         {
-            "request": request,
             "user": {
                 "name": session.user_name,
                 "email": session.user_email,
