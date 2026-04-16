@@ -1,8 +1,8 @@
 """
-Base OAuth Provider — the blueprint every provider follows.
+Base OAuth Provider - the blueprint every provider follows.
 
-To add a new provider (Discord, Spotify, etc.), just subclass this
-and fill in the URLs. That's it. See github.py for a working example.
+To add a new provider (Discord, Spotify, etc.), subclass this
+and fill in the URLs. See github.py for a working example.
 """
 
 from __future__ import annotations
@@ -30,7 +30,7 @@ class OAuthToken:
 
 @dataclass
 class UserInfo:
-    """Normalized user profile — same shape regardless of provider."""
+    """Normalized user profile, same shape regardless of provider."""
 
     id: str
     name: str
@@ -45,11 +45,11 @@ class OAuthProvider(ABC):
     Base class for all OAuth 2.0 providers.
 
     Subclass this, set the class-level URLs, and implement
-    `normalize_userinfo()`. The base class handles the rest:
-    building auth URLs, exchanging codes for tokens, fetching user info.
+    normalize_userinfo(). The base class handles building auth URLs,
+    exchanging codes for tokens, and fetching user info.
     """
 
-    # ---- Override these in your provider ----
+    # Override these in your provider
     name: str = ""                  # e.g. "github"
     display_name: str = ""          # e.g. "GitHub"
     authorize_url: str = ""         # Provider's authorization endpoint
@@ -67,8 +67,7 @@ class OAuthProvider(ABC):
         """
         Build the URL to redirect the user to for authorization.
 
-        Returns:
-            (url, state) — the full URL and the state token for CSRF protection.
+        Returns (url, state) - the full URL and the state token for CSRF protection.
         """
         if state is None:
             state = secrets.token_urlsafe(32)
@@ -83,7 +82,7 @@ class OAuthProvider(ABC):
         url = f"{self.authorize_url}?{urlencode(params)}"
 
         print(f"\n{'='*60}")
-        print(f"  🔗 STEP 1 — Redirect user to {self.display_name}")
+        print(f"  STEP 1: Redirect user to {self.display_name}")
         print(f"{'='*60}")
         print(f"  URL: {self.authorize_url}")
         print(f"  client_id:    {self.client_id[:8]}...")
@@ -98,8 +97,7 @@ class OAuthProvider(ABC):
         """
         Exchange the authorization code for an access token.
 
-        This is the POST request your app makes server-to-server.
-        The user never sees this — it happens in the background.
+        This is the server-to-server POST request. The user never sees this.
         """
         data = {
             "client_id": self.client_id,
@@ -110,7 +108,7 @@ class OAuthProvider(ABC):
         }
 
         print(f"\n{'='*60}")
-        print(f"  🔄 STEP 3 — Exchange code for token")
+        print(f"  STEP 3: Exchange code for token")
         print(f"{'='*60}")
         print(f"  POST {self.token_url}")
         print(f"  code:   {code[:16]}...")
@@ -135,20 +133,17 @@ class OAuthProvider(ABC):
             raw=raw,
         )
 
-        print(f"  ✅ Got access token: {token.access_token[:12]}...")
+        print(f"  Got access token: {token.access_token[:12]}...")
         print(f"  Token type: {token.token_type}")
         print(f"  Scope: {token.scope}\n")
 
         return token
 
     async def get_userinfo(self, token: OAuthToken) -> UserInfo:
-        """
-        Use the access token to fetch the user's profile.
+        """Use the access token to fetch the user's profile."""
 
-        This is the "payoff" — the whole reason we did OAuth.
-        """
         print(f"\n{'='*60}")
-        print(f"  📡 STEP 4 — Fetch user info from {self.display_name}")
+        print(f"  STEP 4: Fetch user info from {self.display_name}")
         print(f"{'='*60}")
         print(f"  GET {self.userinfo_url}")
         print(f"  Authorization: Bearer {token.access_token[:12]}...")
@@ -166,7 +161,7 @@ class OAuthProvider(ABC):
         user.provider = self.name
         user.raw = raw
 
-        print(f"  ✅ Got user info:")
+        print(f"  Got user info:")
         print(f"     Name:   {user.name}")
         print(f"     Email:  {user.email or 'not provided'}")
         print(f"     Avatar: {user.avatar[:40] + '...' if user.avatar else 'none'}\n")

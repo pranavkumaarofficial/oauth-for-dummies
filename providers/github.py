@@ -1,8 +1,8 @@
 """
-GitHub OAuth Provider — the easiest one to start with.
+GitHub OAuth Provider
 
 GitHub's OAuth is straightforward and well-documented,
-making it the perfect first provider to understand.
+making it a good first provider to understand.
 """
 
 from __future__ import annotations
@@ -17,7 +17,7 @@ from providers.base import OAuthProvider, OAuthToken, UserInfo
 class GitHubProvider(OAuthProvider):
     name = "github"
     display_name = "GitHub"
-    icon = "🐙"
+    icon = ""
     authorize_url = "https://github.com/login/oauth/authorize"
     token_url = "https://github.com/login/oauth/access_token"
     userinfo_url = "https://api.github.com/user"
@@ -37,14 +37,13 @@ class GitHubProvider(OAuthProvider):
 
     async def get_userinfo(self, token: OAuthToken) -> UserInfo:
         """
-        Override to also fetch email if not in public profile.
+        Also fetch email if not in public profile.
 
         GitHub sometimes hides email from the /user endpoint.
         We try /user/emails as a fallback.
         """
         user = await super().get_userinfo(token)
 
-        # If no email in profile, try the emails endpoint
         if not user.email:
             try:
                 async with httpx.AsyncClient() as client:
@@ -61,8 +60,8 @@ class GitHubProvider(OAuthProvider):
                         )
                         if primary:
                             user.email = primary["email"]
-                            print(f"  📧 Found email via /user/emails: {user.email}")
+                            print(f"  Found email via /user/emails: {user.email}")
             except Exception:
-                pass  # Email is optional, don't crash
+                pass  # Email is optional
 
         return user

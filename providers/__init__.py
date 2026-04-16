@@ -1,1 +1,1 @@
-"""OAuth providers — plug-and-play provider implementations."""
+"""OAuth providers - plug-and-play provider implementations."""

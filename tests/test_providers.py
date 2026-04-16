@@ -18,7 +18,7 @@ class MockProvider(OAuthProvider):
     token_url = "https://mock.example.com/token"
     userinfo_url = "https://mock.example.com/userinfo"
     default_scopes = ["read", "email"]
-    icon = "🧪"
+    icon = ""
 
     def normalize_userinfo(self, raw: dict) -> UserInfo:
         return UserInfo(

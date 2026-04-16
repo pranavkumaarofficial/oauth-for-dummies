@@ -1,1 +1,1 @@
-"""OAuth for Dummies — FastAPI application."""
+"""OAuth for Dummies - FastAPI application."""

@@ -1,8 +1,8 @@
 """
-Google OAuth Provider — uses OpenID Connect.
+Google OAuth Provider - uses OpenID Connect.
 
 Google adds a layer on top of OAuth 2.0 called OpenID Connect (OIDC).
-The main difference: you get an `id_token` with user info baked in,
+The main difference: you get an id_token with user info baked in,
 so you don't always need a separate API call.
 
 For simplicity, we still use the userinfo endpoint here.
@@ -18,7 +18,7 @@ from providers.base import OAuthProvider, UserInfo
 class GoogleProvider(OAuthProvider):
     name = "google"
     display_name = "Google"
-    icon = "🔵"
+    icon = ""
     authorize_url = "https://accounts.google.com/o/oauth2/v2/auth"
     token_url = "https://oauth2.googleapis.com/token"
     userinfo_url = "https://www.googleapis.com/oauth2/v2/userinfo"

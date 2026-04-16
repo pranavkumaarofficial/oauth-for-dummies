@@ -1,4 +1,4 @@
-# 🖼️ How OAuth 2.0 Works — Visual Guide
+# How OAuth 2.0 Works: Visual Guide
 
 > A picture is worth a thousand RFCs.
 
@@ -57,8 +57,8 @@ is the key to understanding OAuth security.
 │  ← Authorization code (in redirect URL)              │
 │  ← Session cookie (after login complete)             │
 │                                                      │
-│  ⚠️  The authorization CODE travels here.            │
-│     That's why it's short-lived and one-time-use.    │
+│  The authorization CODE travels here.                │
+│  That's why it's short-lived and one-time-use.       │
 └─────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────┐
@@ -69,8 +69,8 @@ is the key to understanding OAuth security.
 │  → Access token → API endpoint                       │
 │  ← User data (from provider)                         │
 │                                                      │
-│  ✅ The access TOKEN only travels here.              │
-│     The user's browser never sees it.                │
+│  The access TOKEN only travels here.                 │
+│  The user's browser never sees it.                   │
 └─────────────────────────────────────────────────────┘
 ```
 
@@ -108,7 +108,7 @@ WITHOUT OAUTH                        WITH OAUTH
 User: "Here's my password"           User: "I authorize read:user scope"
   │                                    │
   ▼                                    ▼
-App stores password 😱                App gets a token 🔒
+App stores password                   App gets a token
   │                                    │
   ▼                                    ▼
 App can do ANYTHING                   App can ONLY read profile
@@ -138,8 +138,8 @@ Tricks victim's browser into          Tricks victim's browser into
   sending code to YOUR app              sending code to YOUR app
   │                                      │
   ▼                                      ▼
-Your app accepts it! 😱               Your app checks: does the state
-Attacker's GitHub account               match what I stored? NO! 🚫
+Your app accepts it!                  Your app checks: does the state
+Attacker's GitHub account               match what I stored? NO!
   is now linked to victim's           Request rejected. Attack failed.
   session on your app.
 ```

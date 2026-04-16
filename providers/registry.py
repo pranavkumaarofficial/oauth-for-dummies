@@ -1,8 +1,7 @@
 """
-Provider Registry — auto-discovers and manages OAuth providers.
+Provider Registry - manages OAuth providers.
 
-Just drop a new provider file in the providers/ folder and it's available.
-No need to edit a config file or register anything manually.
+Add new providers here as you build them.
 """
 
 from __future__ import annotations
@@ -12,9 +11,6 @@ from providers.github import GitHubProvider
 from providers.google import GoogleProvider
 from app.config import settings
 
-
-# ---- Registry of all available providers ----
-# Add new providers here as you build them.
 
 _PROVIDER_CONFIGS: dict[str, dict] = {
     "github": {
@@ -34,14 +30,7 @@ def get_provider(name: str) -> OAuthProvider:
     """
     Get a configured provider instance by name.
 
-    Args:
-        name: Provider name (e.g. "github", "google")
-
-    Returns:
-        A ready-to-use provider instance.
-
-    Raises:
-        ValueError: If the provider doesn't exist or isn't configured.
+    Raises ValueError if the provider doesn't exist or isn't configured.
     """
     config = _PROVIDER_CONFIGS.get(name)
     if not config:
@@ -65,12 +54,7 @@ def get_provider(name: str) -> OAuthProvider:
 
 
 def list_providers() -> list[dict]:
-    """
-    List all providers and whether they're configured.
-
-    Returns a list of dicts like:
-        [{"name": "github", "display_name": "GitHub", "configured": True, "icon": "🐙"}, ...]
-    """
+    """List all providers and whether they're configured."""
     result = []
     for name, config in _PROVIDER_CONFIGS.items():
         cls = config["class"]

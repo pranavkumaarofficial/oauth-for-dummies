@@ -1,5 +1,5 @@
 """
-Tests for the auth flow — storage, state verification, sessions.
+Tests for the auth flow - storage, state verification, sessions.
 
 Run with: pytest tests/ -v
 """

@@ -1,4 +1,4 @@
-# 📖 OAuth 2.0 Tutorial — From Zero to "I Get It"
+# OAuth 2.0 Tutorial: From Zero to "I Get It"
 
 > This tutorial assumes you know basic Python and have used `pip install`.
 > That's it. No prior auth knowledge needed.
@@ -8,15 +8,15 @@
 ## Chapter 1: Why Does OAuth Exist?
 
 Imagine you're building an app that shows someone's GitHub repositories.
-The old way: ask for their GitHub username and password. **Terrible idea.**
+The old way: ask for their GitHub username and password. Terrible idea.
 
 - You're storing someone else's password
 - If your app gets hacked, their GitHub is compromised
 - They can't limit what you access
 - They can't revoke your access without changing their password
 
-**OAuth fixes all of this.** The user tells GitHub: *"Let this app see my repos."*
-Your app gets a token — a temporary key that only works for what the user allowed.
+OAuth fixes all of this. The user tells GitHub: *"Let this app see my repos."*
+Your app gets a token, a temporary key that only works for what the user allowed.
 
 ---
 
@@ -40,7 +40,7 @@ Sometimes the Authorization Server and Resource Server are the same company
 
 Here's the entire OAuth 2.0 Authorization Code flow in plain language:
 
-**Step 1 — Your app says "go ask GitHub"**
+**Step 1: Your app says "go ask GitHub"**
 
 Your app builds a URL to GitHub's authorization page and redirects the user there.
 The URL includes your app's ID and what permissions you want.
@@ -53,12 +53,12 @@ https://github.com/login/oauth/authorize?
   state=random-csrf-token
 ```
 
-**Step 2 — The user says "yes, I trust this app"**
+**Step 2: The user says "yes, I trust this app"**
 
 GitHub shows a consent screen: *"OAuth for Dummies wants to access your profile."*
 The user clicks "Authorize."
 
-**Step 3 — GitHub sends a code to your app**
+**Step 3: GitHub sends a code to your app**
 
 GitHub redirects the user back to your app with a short-lived authorization code:
 
@@ -68,7 +68,7 @@ http://localhost:8000/auth/github/callback?code=xyz789&state=random-csrf-token
 
 This code is NOT the access token. It's a one-time-use ticket that expires in minutes.
 
-**Step 4 — Your app trades the code for a token**
+**Step 4: Your app trades the code for a token**
 
 Your app makes a server-to-server POST request (the user doesn't see this):
 
@@ -81,7 +81,7 @@ POST https://github.com/login/oauth/access_token
 
 GitHub responds with an access token.
 
-**Step 5 — Your app uses the token**
+**Step 5: Your app uses the token**
 
 Now your app can call GitHub's API:
 
@@ -102,7 +102,7 @@ Because the authorization code travels through the user's browser (in the URL).
 If someone intercepts it, they still can't use it without your `client_secret`,
 which never leaves your server.
 
-The access token, on the other hand, only travels server-to-server — it never
+The access token only travels server-to-server. It never
 touches the browser. This is called the **Authorization Code Grant** and it's
 the most secure standard OAuth flow.
 
@@ -121,13 +121,13 @@ With the `state` parameter, your app generates a random token, stores it,
 and checks that it matches when the callback comes in. If it doesn't match,
 someone is trying something sketchy.
 
-**In our code** (`app/auth/routes.py`):
+In our code (`app/auth/routes.py`):
 ```python
-# On login — generate and save state
+# On login: generate and save state
 auth_url, state = provider.get_authorization_url()
 store.save_state(state, provider_name)
 
-# On callback — verify state
+# On callback: verify state
 saved_provider = store.verify_state(state)
 if saved_provider is None:
     # CSRF attack! Reject this request.
@@ -148,7 +148,7 @@ to someone's account, you only request what you need.
 | `repo` | Full access to repositories |
 | `read:org` | Read organization membership |
 
-**Golden rule:** request the minimum scopes you need. Users trust apps that
+Golden rule: request the minimum scopes you need. Users trust apps that
 ask for less.
 
 In our code, each provider defines its default scopes:
@@ -163,8 +163,8 @@ class GitHubProvider(OAuthProvider):
 
 Access tokens expire. When they do, your app has two options:
 
-1. **Make the user login again** — simple but annoying
-2. **Use a refresh token** — seamless but more complex
+1. **Make the user login again** - simple but annoying
+2. **Use a refresh token** - seamless but more complex
 
 A refresh token is a long-lived token that can request new access tokens
 without user interaction. Not all providers give you one (GitHub doesn't
@@ -180,14 +180,14 @@ POST /oauth/token
 ```
 
 We don't implement refresh tokens in the basic demo to keep things simple,
-but check the `providers/base.py` — the `OAuthToken` dataclass already
+but the `OAuthToken` dataclass in `providers/base.py` already
 has a `refresh_token` field ready for when you want to add it.
 
 ---
 
 ## Chapter 8: Running the Demo
 
-Now that you understand the theory, go see it in action:
+Now that you understand the theory, see it in action:
 
 ```bash
 # 1. Set up GitHub OAuth keys (see README.md)
@@ -196,14 +196,14 @@ uvicorn app.main:app --reload
 
 # 3. Open http://localhost:8000
 # 4. Click "Login with GitHub"
-# 5. Watch your terminal — every step is logged
+# 5. Watch your terminal
 ```
 
 Your terminal will show something like:
 
 ```
 ============================================================
-  🔗 STEP 1 — Redirect user to GitHub
+  STEP 1: Redirect user to GitHub
 ============================================================
   URL: https://github.com/login/oauth/authorize
   client_id:    abc12345...
@@ -240,16 +240,16 @@ Check your app settings on the provider's developer portal.
 
 ## Chapter 10: What Next?
 
-Now that you understand OAuth 2.0, here are your next steps:
+Now that you understand OAuth 2.0:
 
-1. **Add another provider** — try Google or Discord to see how the
+1. **Add another provider** - try Google or Discord to see how the
    pattern stays the same across providers
-2. **Read about PKCE** — an extra security layer for mobile/SPA apps
-3. **Look at Authlib** — now that you understand the concepts, a
+2. **Read about PKCE** - an extra security layer for mobile/SPA apps
+3. **Look at Authlib** - now that you understand the concepts, a
    production library will make much more sense
-4. **Build something real** — add OAuth login to your own project
+4. **Build something real** - add OAuth login to your own project
 
 ---
 
-*If this tutorial helped you, give the repo a ⭐ on GitHub.
-It helps other confused developers find it.*
+*If this tutorial helped you, give the repo a star on GitHub.
+It helps other developers find it.*

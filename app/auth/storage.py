@@ -1,10 +1,8 @@
 """
-Token Storage — keeps track of logged-in users.
+Token Storage - keeps track of logged-in users.
 
-This is a simple in-memory + JSON file store for learning purposes.
-In production, you'd use a database (PostgreSQL, Redis, etc.).
-
-⚠️  This is NOT production-ready. It's designed to be readable.
+Simple in-memory + JSON file store for learning purposes.
+In production, use a database (PostgreSQL, Redis, etc.).
 """
 
 from __future__ import annotations
@@ -37,11 +35,7 @@ class StoredSession:
 
 
 class TokenStore:
-    """
-    Dead-simple session storage.
-
-    Stores sessions in memory and optionally persists to a JSON file.
-    """
+    """Simple session storage. In-memory with optional JSON persistence."""
 
     def __init__(self):
         self._sessions: dict[str, StoredSession] = {}
@@ -54,7 +48,7 @@ class TokenStore:
     def verify_state(self, state: str) -> str | None:
         """
         Check if the state token is valid and return the provider name.
-        Returns None if the state is unknown (possible CSRF attack!).
+        Returns None if the state is unknown (possible CSRF attack).
         """
         return self._states.pop(state, None)
 
@@ -62,7 +56,7 @@ class TokenStore:
         """Store a user session after successful login."""
         self._sessions[session.session_id] = session
         self._persist()
-        print(f"  💾 Session saved for {session.user_name} ({session.provider})")
+        print(f"  Session saved for {session.user_name} ({session.provider})")
 
     def get_session(self, session_id: str) -> StoredSession | None:
         """Retrieve a session by its ID."""
@@ -79,8 +73,8 @@ class TokenStore:
             data = {k: asdict(v) for k, v in self._sessions.items()}
             STORAGE_FILE.write_text(json.dumps(data, indent=2))
         except Exception:
-            pass  # Don't crash if we can't write
+            pass
 
 
-# Global store instance — shared across the app
+# Global store instance
 store = TokenStore()

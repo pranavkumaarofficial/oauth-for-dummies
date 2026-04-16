@@ -222,10 +222,6 @@ body {
     box-shadow: none;
 }
 
-.provider-icon {
-    font-size: 1.2rem;
-}
-
 .badge {
     position: absolute;
     right: 1rem;

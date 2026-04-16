@@ -1,8 +1,7 @@
 """
-OAuth for Dummies — Main Application
+OAuth for Dummies - Main Application
 
-This is the entry point. Run it with:
-    uvicorn app.main:app --reload
+Run with: uvicorn app.main:app --reload
 """
 
 from __future__ import annotations
@@ -19,27 +18,22 @@ from app.auth.routes import router as auth_router
 from app.auth.storage import store
 from providers.registry import list_providers
 
-# ---- App setup ----
 app = FastAPI(
     title=settings.APP_NAME,
     description="Learn OAuth 2.0 the easy way.",
     version="1.0.0",
 )
 
-# Static files & templates
 BASE_DIR = Path(__file__).resolve().parent
 app.mount("/static", StaticFiles(directory=BASE_DIR / "static"), name="static")
 templates = Jinja2Templates(directory=BASE_DIR / "templates")
 
-# Register auth routes
 app.include_router(auth_router)
 
 
-# ---- Pages ----
-
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request):
-    """Landing page — shows available login buttons."""
+    """Landing page with login buttons."""
     providers = list_providers()
     session_id = request.cookies.get("session_id")
     user = None
@@ -66,7 +60,7 @@ async def home(request: Request):
 
 @app.get("/profile", response_class=HTMLResponse)
 async def profile(request: Request):
-    """Profile page — shows user data after login."""
+    """Profile page showing user data after login."""
     session_id = request.cookies.get("session_id")
     if not session_id:
         return templates.TemplateResponse(
@@ -107,21 +101,19 @@ async def profile(request: Request):
     )
 
 
-# ---- Startup banner ----
-
 @app.on_event("startup")
 async def startup():
     providers = list_providers()
     configured = [p for p in providers if p["configured"]]
 
     print(f"\n{'='*60}")
-    print(f"  🔐 {settings.APP_NAME}")
+    print(f"  {settings.APP_NAME}")
     print(f"{'='*60}")
     print(f"  Server:    {settings.base_url}")
     print(f"  Providers: {len(configured)}/{len(providers)} configured")
     for p in providers:
-        status = "✅" if p["configured"] else "⚠️  not configured"
-        print(f"    {p['icon']}  {p['display_name']}: {status}")
+        status = "ready" if p["configured"] else "not configured"
+        print(f"    {p['display_name']}: {status}")
     print(f"{'='*60}")
     print(f"  Open {settings.base_url} in your browser to start!")
     print(f"{'='*60}\n")

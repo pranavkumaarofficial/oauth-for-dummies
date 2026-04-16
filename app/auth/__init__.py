@@ -1,1 +1,1 @@
-"""Auth module — login/callback routes and session storage."""
+"""Auth module - login/callback routes and session storage."""

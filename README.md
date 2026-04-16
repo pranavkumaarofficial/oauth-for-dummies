@@ -3,33 +3,32 @@
 </p>
 
 <p align="center">
-  <strong>🔐 Learn OAuth 2.0 the easy way. Build it. Break it. Get it.</strong>
+  <strong>Learn OAuth 2.0 the easy way. Build it. Break it. Get it.</strong>
 </p>
 
 <p align="center">
-  <a href="#-60-second-quickstart"><img src="https://img.shields.io/badge/⏱️_Try_it-in_60_seconds-brightgreen?style=for-the-badge" alt="Quickstart"/></a>
-  <a href="https://github.com/yourusername/oauth-for-dummies/stargazers"><img src="https://img.shields.io/github/stars/yourusername/oauth-for-dummies?style=for-the-badge&logo=github&color=yellow" alt="Stars"/></a>
+  <a href="#-quickstart"><img src="https://img.shields.io/badge/Try_it-in_60_seconds-brightgreen?style=for-the-badge" alt="Quickstart"/></a>
+  <a href="https://github.com/pranavkumaarofficial/oauth-for-dummies/stargazers"><img src="https://img.shields.io/github/stars/pranavkumaarofficial/oauth-for-dummies?style=for-the-badge&logo=github&color=yellow" alt="Stars"/></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue?style=for-the-badge" alt="MIT License"/></a>
   <a href="https://www.python.org/"><img src="https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python"/></a>
   <a href="https://fastapi.tiangolo.com/"><img src="https://img.shields.io/badge/FastAPI-0.100+-009688?style=for-the-badge&logo=fastapi&logoColor=white" alt="FastAPI"/></a>
 </p>
 
 <p align="center">
-  <a href="#-what-is-oauth-20">What is OAuth?</a> •
-  <a href="#-60-second-quickstart">Quickstart</a> •
-  <a href="#-supported-providers">Providers</a> •
-  <a href="#-project-structure">Structure</a> •
-  <a href="#-add-your-own-provider">Extend</a> •
-  <a href="#-why-this-exists">Why?</a>
+  <a href="#-what-is-oauth-20">What is OAuth?</a> ·
+  <a href="#-quickstart">Quickstart</a> ·
+  <a href="#-providers">Providers</a> ·
+  <a href="#-project-structure">Structure</a> ·
+  <a href="#-add-your-own-provider">Extend</a>
 </p>
 
 ---
 
-## 🤷 What is OAuth 2.0?
+## What is OAuth 2.0?
 
-**You know how some apps say "Login with Google"?** That's OAuth.
+You know how some apps say "Login with Google"? That's OAuth.
 
-Instead of giving an app your password, you tell Google: *"Hey, it's cool — let this app see my name and email."* The app never sees your password. It gets a **token** instead.
+Instead of giving an app your password, you tell Google: *"Let this app see my name and email."* The app never sees your password. It gets a **token** instead.
 
 ```
 ┌──────────┐                          ┌──────────────┐
@@ -52,116 +51,106 @@ Instead of giving an app your password, you tell Google: *"Hey, it's cool — le
               └───────────────┘
                       │
                       ▼
-              🎉 You're logged in. No password shared. Ever.
+              You're logged in. No password shared. Ever.
 ```
 
-**That's it. That's OAuth.** This project shows you exactly how to build this, step by step, with real code.
+That's it. That's OAuth. This project shows you how to build this from scratch with real code.
 
 ---
 
-## ⏱️ 60-Second Quickstart
+## Quickstart
+
+> You need GitHub OAuth keys first. If you don't have them, jump to [Setup Your OAuth App](#-setup-your-oauth-app) and come back.
 
 ```bash
-# 1. Clone it
-git clone https://github.com/yourusername/oauth-for-dummies.git
+git clone https://github.com/pranavkumaarofficial/oauth-for-dummies.git
 cd oauth-for-dummies
 
-# 2. Install it
 pip install -r requirements.txt
 
-# 3. Copy the example env and add your GitHub OAuth keys
 cp .env.example .env
-# Edit .env with your CLIENT_ID and CLIENT_SECRET
+# Edit .env - add your GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET
 
-# 4. Run it
 uvicorn app.main:app --reload
-
-# 5. Open http://localhost:8000 and click "Login with GitHub" 🎉
+# Open http://localhost:8000 and click "Login with GitHub"
 ```
-
-> **Don't have GitHub OAuth keys yet?** See [Setup Guide →](#-setup-your-oauth-app)
 
 ---
 
-## 🆚 Why This Exists
+## Why this over Authlib/OAuthLib?
 
 | | **OAuth for Dummies** | **Authlib** | **OAuthLib** | **requests-oauthlib** |
 |---|---|---|---|---|
 | **Goal** | Learn OAuth | Production auth | Spec compliance | HTTP client auth |
-| **Beginner friendly?** | ✅ Extremely | ❌ Advanced | ❌ Advanced | ⚠️ Moderate |
-| **Working demo app?** | ✅ Full UI | ❌ No | ❌ No | ❌ No |
-| **Step-by-step docs?** | ✅ Tutorial-style | ⚠️ Reference only | ⚠️ Reference only | ⚠️ Reference only |
-| **Visual flow diagrams?** | ✅ Yes | ❌ No | ❌ No | ❌ No |
-| **Add providers easily?** | ✅ Plugin pattern | ✅ Yes | ⚠️ Complex | ⚠️ Moderate |
-| **Lines of code to "hello world"** | ~20 | ~50 | ~80+ | ~40 |
+| **Beginner friendly?** | Yes | No | No | Somewhat |
+| **Working demo app?** | Yes, full UI | No | No | No |
+| **Step-by-step tutorial?** | Yes | Reference only | Reference only | Reference only |
+| **Visual flow diagrams?** | Yes | No | No | No |
+| **Lines to "hello world"** | ~20 | ~50 | ~80+ | ~40 |
 
-**This isn't a replacement for Authlib.** It's the thing you use *before* Authlib so you actually understand what's happening.
-
----
-
-## 🌐 Supported Providers
-
-| Provider | Status | Difficulty | What You'll Learn |
-|----------|--------|-----------|-------------------|
-| 🐙 **GitHub** | ✅ Ready | Beginner | The core OAuth 2.0 flow |
-| 🔵 **Google** | ✅ Ready | Beginner | OpenID Connect basics |
-| 🟣 **Discord** | 📋 Template | Intermediate | Scopes & permissions |
-| 🟢 **Spotify** | 📋 Template | Intermediate | Refresh tokens |
-| 🔧 **Custom** | 📋 Template | Advanced | Build your own provider |
-
-> **Want to add a provider?** See [Add Your Own Provider →](#-add-your-own-provider)
+This is not a replacement for Authlib. Use this *before* Authlib so you actually understand what's going on under the hood.
 
 ---
 
-## 🏗️ Project Structure
+## Providers
+
+| Provider | Status | What You'll Learn |
+|----------|--------|-------------------|
+| GitHub | Ready | The core OAuth 2.0 flow |
+| Google | Ready | OpenID Connect basics |
+| Discord | Template | Scopes and permissions |
+| Spotify | Template | Refresh tokens |
+| Custom | Template | Build your own |
+
+Want to add one? See [Add Your Own Provider](#-add-your-own-provider).
+
+---
+
+## Project Structure
 
 ```
 oauth-for-dummies/
 │
 ├── app/
-│   ├── main.py                 # FastAPI app — start here
-│   ├── config.py               # Settings from .env
-│   │
+│   ├── main.py              # FastAPI app entry point, start here
+│   ├── config.py            # Settings from .env
 │   ├── auth/
-│   │   ├── routes.py           # /auth/login, /auth/callback
-│   │   ├── utils.py            # Token exchange helpers
-│   │   └── storage.py          # Simple token store (JSON file)
-│   │
+│   │   ├── routes.py        # /auth/login, /auth/callback, /auth/logout
+│   │   └── storage.py       # In-memory session store
 │   ├── templates/
-│   │   ├── index.html          # Landing page with login buttons
-│   │   ├── profile.html        # Show user data after login
-│   │   └── error.html          # Friendly error page
-│   │
+│   │   ├── index.html       # Landing page with login buttons
+│   │   ├── profile.html     # Shows user data after login
+│   │   └── error.html       # Error page
 │   └── static/
-│       └── style.css           # Minimal, clean styles
+│       └── style.css        # Dark mode styles
 │
 ├── providers/
-│   ├── base.py                 # OAuthProvider base class
-│   ├── github.py               # GitHub provider
-│   ├── google.py               # Google provider
-│   └── registry.py             # Auto-discover providers
+│   ├── base.py              # OAuthProvider base class
+│   ├── github.py            # GitHub provider
+│   ├── google.py            # Google provider
+│   └── registry.py          # Provider registry
 │
 ├── docs/
-│   ├── tutorial.md             # Step-by-step beginner guide
-│   ├── how-oauth-works.md      # Visual explanation
+│   ├── tutorial.md          # Step-by-step beginner guide
+│   ├── how-oauth-works.md   # Visual explanation
 │   └── diagrams/
-│       ├── logo.svg            # Project logo
-│       └── flow.mmd            # Mermaid source for diagrams
+│       ├── logo.svg         # Project logo
+│       └── flow.mmd         # Mermaid diagram source
 │
 ├── tests/
-│   ├── test_providers.py       # Provider unit tests
-│   └── test_auth_flow.py       # Integration tests
+│   ├── test_providers.py    # Provider unit tests
+│   └── test_auth_flow.py    # Auth flow tests
 │
-├── .env.example                # Copy this → .env
-├── requirements.txt            # Dependencies
-├── Dockerfile                  # One-command containerized demo
-├── LICENSE                     # MIT
-└── README.md                   # You are here
+├── .env.example             # Copy to .env, add your keys
+├── requirements.txt
+├── Dockerfile
+├── LICENSE
+└── README.md
 ```
 
 ---
 
-## 🔧 Setup Your OAuth App
+## Setup Your OAuth App
 
 ### GitHub
 
@@ -182,44 +171,43 @@ oauth-for-dummies/
 
 ---
 
-## 🔌 Add Your Own Provider
+## Add Your Own Provider
 
-Every provider is a single Python file. Here's the pattern:
+Every provider is a single Python file:
 
 ```python
-# providers/my_provider.py
+# providers/discord.py
 from providers.base import OAuthProvider
 
-class MyProvider(OAuthProvider):
-    name = "my_provider"
-    display_name = "My Service"
-    authorize_url = "https://my-service.com/oauth/authorize"
-    token_url = "https://my-service.com/oauth/token"
-    userinfo_url = "https://my-service.com/api/me"
-    default_scopes = ["read:user"]
+class DiscordProvider(OAuthProvider):
+    name = "discord"
+    display_name = "Discord"
+    authorize_url = "https://discord.com/api/oauth2/authorize"
+    token_url = "https://discord.com/api/oauth2/token"
+    userinfo_url = "https://discord.com/api/users/@me"
+    default_scopes = ["identify", "email"]
 
     def normalize_userinfo(self, raw: dict) -> dict:
-        """Map provider-specific fields to a common shape."""
         return {
             "id": raw["id"],
-            "name": raw["display_name"],
+            "name": raw["username"],
             "email": raw.get("email"),
-            "avatar": raw.get("avatar_url"),
+            "avatar": f"https://cdn.discordapp.com/avatars/{raw['id']}/{raw['avatar']}.png",
         }
 ```
 
-Drop it in `providers/`, add your keys to `.env`, restart. Done.
+Drop it in `providers/`, register it in `registry.py`, add your keys to `.env`, restart. Done.
 
 ---
 
-## 📚 How the OAuth Flow Works (Step by Step)
+## The OAuth Flow (Step by Step)
 
 ```mermaid
 sequenceDiagram
-    participant U as 👤 User
-    participant A as 🖥️ Your App
-    participant G as 🐙 GitHub
-    participant API as 📡 GitHub API
+    participant U as User
+    participant A as Your App
+    participant G as GitHub
+    participant API as GitHub API
 
     U->>A: Clicks "Login with GitHub"
     A->>G: Redirects to GitHub /authorize
@@ -230,14 +218,14 @@ sequenceDiagram
     G->>A: Returns access_token
     A->>API: GET /user (Bearer token)
     API->>A: Returns {name, email, avatar}
-    A->>U: Shows profile page 🎉
+    A->>U: Shows profile page
 ```
 
-> Every step is logged in your terminal with clear labels so you can see exactly what's happening.
+Every step is logged in your terminal so you can see exactly what's happening.
 
 ---
 
-## 🐳 Docker (Zero Setup)
+## Docker
 
 ```bash
 docker build -t oauth-for-dummies .
@@ -246,36 +234,26 @@ docker run -p 8000:8000 --env-file .env oauth-for-dummies
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
-This project is built for beginners, by beginners (and some experienced devs who remember being confused).
-
-**Great first contributions:**
-- 🌐 Add a new OAuth provider (Discord, Spotify, Twitter, etc.)
-- 📝 Improve the tutorial docs
-- 🎨 Make the demo UI prettier
-- 🧪 Add tests
-- 🌍 Translate the tutorial
+First contributions that would help:
+- Add a new OAuth provider (Discord, Spotify, Twitter, etc.)
+- Improve the tutorial
+- Add tests
+- Translate the docs
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 
----
-
-## ⭐ Star History
-
-If this helped you understand OAuth, **smash that star button.** It helps others find this project.
-
-[![Star History Chart](https://api.star-history.com/svg?repos=yourusername/oauth-for-dummies&type=Date)](https://star-history.com/#yourusername/oauth-for-dummies&Date)
+Questions? Reach out at kumaarp.in@gmail.com
 
 ---
 
-## 📄 License
+## License
 
-MIT — use it, learn from it, build on it.
+MIT
 
 ---
 
 <p align="center">
-  <strong>Built with ❤️ for everyone who's ever been confused by OAuth.</strong><br/>
-  <sub>If this project helped you, consider sharing it on <a href="https://twitter.com/intent/tweet?text=Finally%20understood%20OAuth%202.0%20thanks%20to%20this%20project%20🔐&url=https://github.com/yourusername/oauth-for-dummies">Twitter</a> or <a href="https://www.reddit.com/submit?url=https://github.com/yourusername/oauth-for-dummies&title=OAuth%20for%20Dummies%20-%20Finally%20understand%20OAuth%202.0">Reddit</a>.</sub>
+  <sub>Built by <a href="https://github.com/pranavkumaarofficial">Pranav K</a></sub>
 </p>

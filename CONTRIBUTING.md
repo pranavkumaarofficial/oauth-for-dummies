@@ -1,13 +1,14 @@
 # Contributing to OAuth for Dummies
 
-First off — **thank you!** This project exists to help beginners understand OAuth, and every contribution makes it better for the next person who's confused.
+Thanks for wanting to contribute. This project is built for beginners, so keeping things simple and clear matters more than being clever.
 
-## 🎯 Ways to Contribute
+## Ways to Contribute
 
-### 🌐 Add a New OAuth Provider
-This is the **#1 most impactful contribution** you can make. Every new provider helps someone.
+### Add a New OAuth Provider
 
-**How to do it:**
+This is the most useful contribution you can make. Each new provider helps someone.
+
+How to do it:
 
 1. Create a new file in `providers/` (copy `github.py` as a starting point)
 2. Subclass `OAuthProvider` and fill in the 5 required fields
@@ -16,73 +17,68 @@ This is the **#1 most impactful contribution** you can make. Every new provider 
 5. Update `.env.example` with the new keys
 6. Test it and submit a PR
 
-**Providers we'd love to see:**
-- 🟣 Discord
-- 🟢 Spotify
-- 🐦 Twitter/X
-- 🔗 LinkedIn
-- 🎮 Twitch
-- 📘 Facebook
-- 🍎 Apple
-- 🏢 Microsoft
+Providers we'd like to see:
+- Discord
+- Spotify
+- Twitter/X
+- LinkedIn
+- Twitch
+- Facebook
+- Apple
+- Microsoft
 
-### 📝 Improve Documentation
+### Improve Documentation
 - Fix typos or unclear explanations
-- Add diagrams or illustrations
+- Add diagrams
 - Translate the tutorial into other languages
-- Write a blog post about the project
 
-### 🎨 Improve the Demo UI
-- Make it responsive on mobile
-- Add animations to the flow steps
-- Improve accessibility
+### Improve the Demo UI
+- Mobile responsiveness
+- Accessibility improvements
 - Dark/light mode toggle
 
-### 🧪 Add Tests
+### Add Tests
 - Unit tests for providers
 - Integration tests for the auth flow
 - Edge case coverage
 
-### 🐛 Report Bugs
+### Report Bugs
+
 Open an issue with:
 - What you expected to happen
 - What actually happened
 - Steps to reproduce
 - Your Python version and OS
 
-## 🔧 Development Setup
+## Development Setup
 
 ```bash
 # Fork the repo on GitHub, then:
 git clone https://github.com/YOUR_USERNAME/oauth-for-dummies.git
 cd oauth-for-dummies
 
-# Create a virtual environment
 python -m venv venv
 source venv/bin/activate  # or venv\Scripts\activate on Windows
 
-# Install dependencies
 pip install -r requirements.txt
 
-# Copy environment variables
 cp .env.example .env
 # Edit .env with your OAuth keys
 
-# Run the app
 uvicorn app.main:app --reload
 
 # Run tests
 pytest
 ```
 
-## 📐 Code Style
+## Code Style
 
-Keep it **beginner-friendly**. That means:
+Keep it beginner-friendly:
 
-- **Clear variable names** over clever abbreviations
-- **Comments that explain WHY**, not just what
-- **Simple patterns** over advanced abstractions
-- **Short files** — if a file is over 150 lines, consider splitting it
+- Clear variable names over clever abbreviations
+- Comments that explain why, not just what
+- Simple patterns over advanced abstractions
+- Short files. If a file is over 150 lines, consider splitting it
 
 We use standard Python formatting. If you have `black` installed, run it:
 
@@ -90,18 +86,14 @@ We use standard Python formatting. If you have `black` installed, run it:
 black .
 ```
 
-## 🚀 Submitting a Pull Request
+## Submitting a Pull Request
 
-1. **Fork** the repository
-2. **Create a branch**: `git checkout -b add-discord-provider`
-3. **Make your changes** and commit with a clear message
-4. **Push** to your fork: `git push origin add-discord-provider`
-5. **Open a PR** with a description of what you changed and why
+1. Fork the repository
+2. Create a branch: `git checkout -b add-discord-provider`
+3. Make your changes and commit with a clear message
+4. Push to your fork: `git push origin add-discord-provider`
+5. Open a PR with a description of what you changed and why
 
-## 💬 Questions?
+## Questions?
 
-Open an issue with the "question" label. No question is too basic — this project is literally called "for Dummies."
-
----
-
-**Every contribution counts.** Whether it's fixing a typo or adding a whole new provider, you're helping someone learn. Thank you. 🙏
+Open an issue or reach out at kumaarp.in@gmail.com. No question is too basic.
