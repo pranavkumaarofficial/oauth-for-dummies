@@ -1,0 +1,22 @@
+%% OAuth 2.0 Authorization Code Flow
+%% Render at https://mermaid.live or in GitHub README
+
+sequenceDiagram
+    participant U as 👤 User
+    participant A as 🖥️ Your App
+    participant G as 🐙 GitHub
+    participant API as 📡 GitHub API
+
+    U->>A: Clicks "Login with GitHub"
+    A->>G: Redirects to GitHub /authorize
+    Note over A,G: client_id + scope + state + redirect_uri
+    G->>U: "Authorize this app?"
+    U->>G: Clicks "Yes"
+    G->>A: Redirects back with ?code=abc123&state=xyz
+    Note over A: Verifies state matches (CSRF check)
+    A->>G: POST /access_token (code + client_secret)
+    Note over A,G: Server-to-server — user doesn't see this
+    G->>A: Returns access_token
+    A->>API: GET /user (Bearer token)
+    API->>A: Returns {name, email, avatar}
+    A->>U: Shows profile page 🎉

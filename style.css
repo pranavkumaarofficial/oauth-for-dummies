@@ -1,0 +1,355 @@
+/* ============================================
+   OAuth for Dummies — Styles
+   Clean, modern, beginner-friendly aesthetic.
+   ============================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+
+:root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface-hover: #22263a;
+    --border: #2a2e3f;
+    --text: #e4e4e7;
+    --text-muted: #8b8fa3;
+    --accent: #6366f1;
+    --accent-glow: rgba(99, 102, 241, 0.15);
+    --success: #22c55e;
+    --success-bg: rgba(34, 197, 94, 0.08);
+    --radius: 12px;
+    --font: 'Plus Jakarta Sans', -apple-system, sans-serif;
+    --mono: 'JetBrains Mono', monospace;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+}
+
+.container {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 4rem;
+}
+
+/* ---- Hero ---- */
+.hero {
+    text-align: center;
+    padding: 3rem 0 2rem;
+}
+
+.hero-small {
+    padding: 2rem 0 1.5rem;
+}
+
+.logo {
+    font-size: 3.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.hero h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    margin-bottom: 0.5rem;
+}
+
+.tagline {
+    color: var(--text-muted);
+    font-size: 1.05rem;
+}
+
+.back-link {
+    display: inline-block;
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 0.875rem;
+    margin-bottom: 1rem;
+    transition: color 0.2s;
+}
+.back-link:hover {
+    color: var(--text);
+}
+
+/* ---- Cards ---- */
+.card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.75rem;
+    margin-bottom: 1.25rem;
+}
+
+.card h2 {
+    font-size: 1.15rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+}
+
+.card p {
+    color: var(--text-muted);
+    font-size: 0.925rem;
+}
+
+.success-card {
+    border-color: rgba(34, 197, 94, 0.25);
+    background: var(--success-bg);
+}
+
+.hint-card {
+    background: var(--accent-glow);
+    border-color: rgba(99, 102, 241, 0.2);
+}
+
+.hint-card p {
+    color: var(--text);
+    font-size: 0.875rem;
+}
+
+/* ---- User badge ---- */
+.user-badge {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+}
+
+.avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+}
+
+.avatar-large {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 1rem;
+    display: block;
+}
+
+.user-badge h2 {
+    margin-bottom: 0;
+}
+
+.user-badge p {
+    font-size: 0.85rem;
+}
+
+/* ---- Buttons ---- */
+.actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.7rem 1.25rem;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+    font-family: var(--font);
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-primary {
+    background: var(--accent);
+    color: #fff;
+}
+.btn-primary:hover {
+    filter: brightness(1.15);
+}
+
+.btn-outline {
+    background: transparent;
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+}
+.btn-outline:hover {
+    background: var(--surface-hover);
+    color: var(--text);
+}
+
+/* Provider buttons */
+.provider-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    margin-top: 1rem;
+}
+
+.btn-provider {
+    width: 100%;
+    justify-content: flex-start;
+    padding: 0.85rem 1.25rem;
+    border: 1px solid var(--border);
+    background: var(--surface-hover);
+    color: var(--text);
+    font-size: 0.95rem;
+    border-radius: 10px;
+    position: relative;
+}
+.btn-provider:hover {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px var(--accent);
+}
+
+.btn-github:hover { border-color: #e4e4e7; box-shadow: 0 0 0 1px #e4e4e7; }
+.btn-google:hover { border-color: #4285f4; box-shadow: 0 0 0 1px #4285f4; }
+
+.btn-disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+.btn-disabled:hover {
+    border-color: var(--border);
+    box-shadow: none;
+}
+
+.provider-icon {
+    font-size: 1.2rem;
+}
+
+.badge {
+    position: absolute;
+    right: 1rem;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    background: var(--bg);
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* ---- Steps ---- */
+.steps {
+    margin-top: 1rem;
+}
+
+.step {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+    padding: 0.75rem 0;
+}
+
+.step:not(:last-child) {
+    border-bottom: 1px solid var(--border);
+}
+
+.step-number {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--accent-glow);
+    color: var(--accent);
+    border-radius: 50%;
+    font-weight: 700;
+    font-size: 0.85rem;
+}
+
+.step-content h3 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin-bottom: 0.15rem;
+}
+
+.step-content p {
+    font-size: 0.85rem;
+}
+
+/* ---- Profile data table ---- */
+.profile-card {
+    text-align: center;
+}
+
+.data-table {
+    width: 100%;
+    text-align: left;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+
+.data-table tr {
+    border-bottom: 1px solid var(--border);
+}
+
+.data-table td {
+    padding: 0.65rem 0;
+    font-size: 0.9rem;
+}
+
+.data-table .label {
+    color: var(--text-muted);
+    width: 110px;
+    font-weight: 500;
+}
+
+.data-table code {
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    background: var(--bg);
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+}
+
+.url-cell {
+    word-break: break-all;
+}
+
+/* ---- Flow summary ---- */
+.flow-summary {
+    margin-top: 0.75rem;
+}
+
+.flow-step {
+    padding: 0.5rem 0;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+}
+
+.flow-step.done {
+    color: var(--success);
+}
+
+.flow-arrow {
+    color: var(--border);
+    font-size: 0.8rem;
+    padding-left: 0.3rem;
+}
+
+/* ---- Footer ---- */
+footer {
+    text-align: center;
+    padding: 2rem 0 0;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+}
+
+footer a {
+    color: var(--text-muted);
+    text-decoration: none;
+}
+footer a:hover {
+    color: var(--text);
+}
