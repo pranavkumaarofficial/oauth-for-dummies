@@ -1,0 +1,12 @@
+# OAuth credentials — fill these in.
+# Get GitHub keys: https://github.com/settings/developers
+# Get Google keys: https://console.cloud.google.com/apis/credentials
+
+GITHUB_CLIENT_ID=""
+GITHUB_CLIENT_SECRET=""
+
+GOOGLE_CLIENT_ID=""
+GOOGLE_CLIENT_SECRET=""
+
+OAUTH_BASE_URL="http://localhost:8000"
+APP_SECRET_KEY="change-me-to-something-random"

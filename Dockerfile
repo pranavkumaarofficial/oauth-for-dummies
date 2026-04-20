@@ -1,6 +1,6 @@
 FROM python:3.12-slim
 
-LABEL maintainer="yourusername"
+LABEL maintainer="pranavkumaarofficial"
 LABEL description="OAuth for Dummies — Learn OAuth 2.0 the easy way"
 
 WORKDIR /app

@@ -1,3 +1,43 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "oauth-for-dummies"
+version = "1.0.0"
+description = "Add OAuth login to your FastAPI app in one command."
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.9"
+keywords = ["oauth", "fastapi", "authentication", "github", "google", "cli"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Framework :: FastAPI",
+    "Topic :: Internet :: WWW/HTTP",
+    "Topic :: Security",
+]
+
+[project.urls]
+Homepage = "https://github.com/pranavkumaarofficial/oauth-for-dummies"
+Repository = "https://github.com/pranavkumaarofficial/oauth-for-dummies"
+Issues = "https://github.com/pranavkumaarofficial/oauth-for-dummies/issues"
+
+[project.scripts]
+oauth-init = "oauth_for_dummies.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["oauth_for_dummies*"]
+
+[tool.setuptools.package-data]
+oauth_for_dummies = ["scaffold/*"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]

@@ -15,7 +15,7 @@ from pathlib import Path
 from dataclasses import dataclass, asdict
 
 
-STORAGE_FILE = Path(__file__).resolve().parent.parent / ".tokens.json"
+STORAGE_FILE = Path(__file__).resolve().parent.parent.parent / ".tokens.json"
 
 
 @dataclass

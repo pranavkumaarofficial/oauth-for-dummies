@@ -54,7 +54,7 @@ Open an issue with:
 
 ```bash
 # Fork the repo on GitHub, then:
-git clone https://github.com/YOUR_USERNAME/oauth-for-dummies.git
+git clone https://github.com/pranavkumaarofficial/oauth-for-dummies.git
 cd oauth-for-dummies
 
 # Create a virtual environment
