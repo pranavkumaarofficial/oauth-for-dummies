@@ -1,10 +1,8 @@
-<p align="center">
-  <img src="docs/diagrams/logo.svg" alt="OAuth for Dummies — Add OAuth login to FastAPI in one command" width="600"/>
-</p>
+# **OAuth for Dummies**
 
-<h3 align="center">Add "Login with GitHub" and "Login with Google" to any FastAPI app in one command.</h3>
+### Add "Login with GitHub" and "Login with Google" to any FastAPI app in one command.
 
-<p align="center">
+<p>
   <a href="https://pypi.org/project/oauth-for-dummies/"><img src="https://img.shields.io/pypi/v/oauth-for-dummies?style=flat-square&logo=pypi&logoColor=white&label=PyPI" alt="PyPI version"/></a>
   <a href="https://www.python.org/"><img src="https://img.shields.io/badge/python-3.9+-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python 3.9+"/></a>
   <a href="https://fastapi.tiangolo.com/"><img src="https://img.shields.io/badge/FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white" alt="FastAPI"/></a>
@@ -12,9 +10,7 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT License"/></a>
 </p>
 
-<p align="center">
-  <a href="#-quickstart">Quickstart</a>&nbsp;&nbsp;|&nbsp;&nbsp;<a href="#-how-oauth-20-works">How OAuth Works</a>&nbsp;&nbsp;|&nbsp;&nbsp;<a href="#-what-is-oauth-20">What is OAuth?</a>&nbsp;&nbsp;|&nbsp;&nbsp;<a href="#-cli-reference">CLI Reference</a>&nbsp;&nbsp;|&nbsp;&nbsp;<a href="#-tutorial">Tutorial</a>
-</p>
+[Quickstart](#quickstart) | [How OAuth Works](#how-oauth-20-works) | [What is OAuth?](#what-is-oauth-20) | [CLI Reference](#cli-reference) | [Tutorial](#tutorial)
 
 ---
 
@@ -31,7 +27,7 @@ Adding OAuth to a FastAPI app should not take an afternoon. But it does, because
 
 ---
 
-## &#x26A1; Quickstart
+## Quickstart
 
 ```bash
 pip install oauth-for-dummies
@@ -71,7 +67,7 @@ uvicorn oauth_example_app:app --reload
 
 ---
 
-## &#x1F914; What is OAuth 2.0?
+## What is OAuth 2.0?
 
 OAuth 2.0 is how "Login with Google" works. Instead of giving an app your password, you tell Google: "let this app see my name and email." The app never touches your password. It gets a temporary **token** instead.
 
@@ -102,7 +98,7 @@ That's the entire OAuth 2.0 Authorization Code flow. This project implements it 
 
 ---
 
-## &#x1F4CA; How OAuth 2.0 Works
+## How OAuth 2.0 Works
 
 Here's the step-by-step flow that happens when a user clicks "Login with GitHub":
 
@@ -137,7 +133,7 @@ sequenceDiagram
 
 ---
 
-## &#x1F527; Getting OAuth Credentials
+## Getting OAuth Credentials
 
 ### GitHub OAuth Setup
 
@@ -159,7 +155,7 @@ sequenceDiagram
 
 ---
 
-## &#x1F4CB; API Reference
+## API Reference
 
 ### Routes
 
@@ -196,7 +192,7 @@ async def dashboard(request: Request):
 
 ---
 
-## &#x1F4BB; CLI Reference
+## CLI Reference
 
 ```bash
 oauth-init                         # scaffold all providers + example app
@@ -217,7 +213,7 @@ oauth-init --dir ./path/to/project # scaffold into a specific directory
 
 ---
 
-## &#x1F6E1;&#xFE0F; Security
+## Security
 
 The generated code includes these security measures out of the box:
 
@@ -231,7 +227,7 @@ The generated code includes these security measures out of the box:
 
 ---
 
-## &#x1F504; Comparison with Other Libraries
+## Comparison with Other Libraries
 
 | | **oauth-for-dummies** | **Authlib** | **OAuthLib** | **python-social-auth** |
 |---|---|---|---|---|
@@ -247,7 +243,7 @@ The generated code includes these security measures out of the box:
 
 ---
 
-## &#x1F4D6; Tutorial
+## Tutorial
 
 This repo includes a complete tutorial app that logs every step of the OAuth flow to your terminal:
 
@@ -280,7 +276,7 @@ See also:
 
 ---
 
-## &#x1F5C2;&#xFE0F; Project Structure
+## Project Structure
 
 ```
 oauth-for-dummies/
@@ -311,7 +307,7 @@ oauth-for-dummies/
 
 ---
 
-## &#x1F91D; Contributing
+## Contributing
 
 Contributions welcome. Some ideas:
 
@@ -323,7 +319,7 @@ See **[CONTRIBUTING.md](CONTRIBUTING.md)** for setup instructions.
 
 ---
 
-## &#x2753; FAQ
+## FAQ
 
 **Q: Is this production-ready?**
 A: The generated code is fine for internal tools, prototypes, and small apps. For production at scale, swap the in-memory session store for a database and add HTTPS.
@@ -339,7 +335,7 @@ A: No. Run `oauth-init`, add your keys to `.env`, and it works. But if you want 
 
 ---
 
-## &#x1F4C4; License
+## License
 
 MIT — use it, learn from it, build on it.
 
