@@ -1,4 +1,4 @@
-# 📖 OAuth 2.0 Tutorial — From Zero to "I Get It"
+# OAuth 2.0 Tutorial — From Zero to "I Get It"
 
 > This tutorial assumes you know basic Python and have used `pip install`.
 > That's it. No prior auth knowledge needed.
