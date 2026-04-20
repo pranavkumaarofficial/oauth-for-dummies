@@ -16,46 +16,60 @@ from oauth_routes import router as oauth_router, get_session
 app = FastAPI(title="My App")
 app.include_router(oauth_router)
 
+STYLE = """
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&display=swap');
+  * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+  body {{ font-family: 'DM Sans', system-ui, sans-serif; background: #fffbff; color: #1c1b1f;
+         max-width: 480px; margin: 0 auto; padding: 3rem 1.5rem; -webkit-font-smoothing: antialiased; }}
+  h1 {{ font-size: 1.75rem; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 0.25rem; }}
+  .sub {{ color: #49454f; font-size: 0.95rem; margin-bottom: 2rem; }}
+  .btn {{ display: block; width: 100%; padding: 0.9rem 1.5rem; margin-bottom: 0.5rem;
+          border-radius: 28px; text-decoration: none; font-weight: 500; font-size: 0.9rem;
+          font-family: inherit; text-align: center; transition: all 0.15s; }}
+  .btn-github {{ background: #24292e; color: #fff; }}
+  .btn-github:hover {{ background: #333940; }}
+  .btn-google {{ background: #fff; color: #1c1b1f; border: 1px solid #e0dce0; }}
+  .btn-google:hover {{ background: #f4f1f4; }}
+  .card {{ background: #fff; border: 1px solid #e0dce0; border-radius: 16px; padding: 1.5rem;
+           margin-top: 1.5rem; text-align: center; }}
+  img.avatar {{ width: 72px; height: 72px; border-radius: 50%; margin-bottom: 0.75rem; }}
+  .name {{ font-size: 1.1rem; font-weight: 700; }}
+  .meta {{ color: #49454f; font-size: 0.85rem; margin-top: 0.25rem; }}
+  a.logout {{ display: inline-block; margin-top: 1rem; color: #6750a4; text-decoration: none;
+              font-weight: 500; font-size: 0.85rem; }}
+  a.logout:hover {{ text-decoration: underline; }}
+  .footer {{ text-align: center; margin-top: 2.5rem; color: #79747e; font-size: 0.8rem; }}
+  .footer a {{ color: #79747e; text-decoration: none; }}
+  .footer a:hover {{ color: #1c1b1f; }}
+</style>
+"""
 
 LOGIN_PAGE = """
 <!DOCTYPE html>
-<html>
-<head><title>Login</title>
-<style>
-  body {{ font-family: system-ui, sans-serif; max-width: 480px; margin: 60px auto; text-align: center; }}
-  a.btn {{ display: inline-block; margin: 8px; padding: 12px 24px; background: #24292e;
-           color: white; text-decoration: none; border-radius: 6px; font-size: 16px; }}
-  a.btn:hover {{ opacity: 0.85; }}
-  .provider-google {{ background: #4285f4; }}
-</style>
-</head>
+<html><head><title>Login</title>{style}</head>
 <body>
   <h1>Welcome</h1>
-  <p>Choose a login method:</p>
+  <p class="sub">Choose a provider to sign in.</p>
   {buttons}
   {user_info}
-</body>
-</html>
+  <div class="footer"><a href="https://github.com/pranavkumaarofficial/oauth-for-dummies">oauth-for-dummies</a></div>
+</body></html>
 """
 
 PROFILE_PAGE = """
 <!DOCTYPE html>
-<html>
-<head><title>Profile</title>
-<style>
-  body {{ font-family: system-ui, sans-serif; max-width: 480px; margin: 60px auto; text-align: center; }}
-  img {{ width: 80px; height: 80px; border-radius: 50%; }}
-  a {{ color: #e74c3c; }}
-</style>
-</head>
+<html><head><title>Profile</title>{style}</head>
 <body>
-  <img src="{avatar}" alt="avatar" />
-  <h1>{name}</h1>
-  <p>{email}</p>
-  <p>Logged in via <strong>{provider}</strong></p>
-  <p><a href="/auth/logout">Logout</a></p>
-</body>
-</html>
+  <div class="card">
+    <img class="avatar" src="{avatar}" alt="avatar" />
+    <div class="name">{name}</div>
+    <div class="meta">{email}</div>
+    <div class="meta">via {provider}</div>
+    <a class="logout" href="/auth/logout">Sign out</a>
+  </div>
+  <div class="footer"><a href="https://github.com/pranavkumaarofficial/oauth-for-dummies">oauth-for-dummies</a></div>
+</body></html>
 """
 
 
@@ -64,23 +78,24 @@ async def home(request: Request):
     user = get_session(request)
     buttons = ""
     for key, cfg in OAUTH_PROVIDERS.items():
-        css_class = f"provider-{key}" if key != "github" else ""
-        buttons += f'<a class="btn {css_class}" href="/auth/{key}/login">{cfg["icon"]} Login with {cfg["name"]}</a>\n'
+        css_class = f"btn-{key}"
+        buttons += f'<a class="btn {css_class}" href="/auth/{key}/login">Continue with {cfg["name"]}</a>\n'
 
     user_info = ""
     if user:
-        user_info = f'<p>Logged in as <strong>{user["name"]}</strong> — <a href="/profile">Profile</a> | <a href="/auth/logout">Logout</a></p>'
+        user_info = f'<p class="meta" style="margin-top:1rem;">Signed in as <strong>{user["name"]}</strong> — <a href="/profile">Profile</a> | <a href="/auth/logout">Sign out</a></p>'
 
-    return LOGIN_PAGE.format(buttons=buttons, user_info=user_info)
+    return LOGIN_PAGE.format(style=STYLE, buttons=buttons, user_info=user_info)
 
 
 @app.get("/profile", response_class=HTMLResponse)
 async def profile(request: Request):
     user = get_session(request)
     if not user:
-        return HTMLResponse("<p>Not logged in. <a href='/'>Go back</a></p>", status_code=401)
+        return HTMLResponse("<p style='font-family:DM Sans,system-ui,sans-serif;padding:3rem;'>Not signed in. <a href='/'>Go back</a></p>", status_code=401)
 
     return PROFILE_PAGE.format(
+        style=STYLE,
         name=user.get("name", ""),
         email=user.get("email", ""),
         avatar=user.get("avatar", ""),

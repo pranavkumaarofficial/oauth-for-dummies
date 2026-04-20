@@ -9,20 +9,18 @@
 <body>
     <div class="container">
         <header class="hero">
-            <div class="logo">🔐</div>
             <h1>{{ app_name }}</h1>
             <p class="tagline">Learn OAuth 2.0 by actually building it.</p>
         </header>
 
         {% if user %}
-        <!-- Logged in state -->
         <div class="card success-card">
             <div class="user-badge">
                 {% if user.avatar %}
                 <img src="{{ user.avatar }}" alt="{{ user.name }}" class="avatar">
                 {% endif %}
                 <div>
-                    <h2>Welcome, {{ user.name }}! 🎉</h2>
+                    <h2>Welcome, {{ user.name }}</h2>
                     <p>Logged in via <strong>{{ user.provider | capitalize }}</strong></p>
                 </div>
             </div>
@@ -33,10 +31,9 @@
         </div>
 
         {% else %}
-        <!-- Login buttons -->
         <div class="card">
             <h2>Try it out</h2>
-            <p>Click a button below to start the OAuth flow. Watch your terminal for step-by-step logs.</p>
+            <p>Click a provider below to start the OAuth flow. Watch your terminal for step-by-step logs.</p>
 
             <div class="provider-list">
                 {% for p in providers %}
@@ -44,7 +41,7 @@
                    class="btn btn-provider btn-{{ p.name }} {% if not p.configured %}btn-disabled{% endif %}"
                    {% if not p.configured %}onclick="event.preventDefault(); alert('{{ p.display_name }} is not configured. Add {{ p.name | upper }}_CLIENT_ID and {{ p.name | upper }}_CLIENT_SECRET to your .env file.')"{% endif %}>
                     <span class="provider-icon">{{ p.icon }}</span>
-                    <span>Login with {{ p.display_name }}</span>
+                    <span>Continue with {{ p.display_name }}</span>
                     {% if not p.configured %}
                     <span class="badge">not configured</span>
                     {% endif %}
@@ -53,14 +50,13 @@
             </div>
         </div>
 
-        <!-- How it works -->
         <div class="card">
             <h2>How it works</h2>
             <div class="steps">
                 <div class="step">
                     <div class="step-number">1</div>
                     <div class="step-content">
-                        <h3>You click "Login"</h3>
+                        <h3>You click "Continue"</h3>
                         <p>Your app redirects you to the provider (GitHub, Google, etc.)</p>
                     </div>
                 </div>
@@ -74,7 +70,7 @@
                 <div class="step">
                     <div class="step-number">3</div>
                     <div class="step-content">
-                        <h3>Code → Token</h3>
+                        <h3>Code to token</h3>
                         <p>The provider sends back a code. Your app exchanges it for an access token.</p>
                     </div>
                 </div>
@@ -89,16 +85,16 @@
         </div>
 
         <div class="card hint-card">
-            <p>💡 <strong>Tip:</strong> Keep your terminal open while you login. Every step of the OAuth flow is logged with clear labels so you can see exactly what's happening behind the scenes.</p>
+            <p><strong>Tip:</strong> Keep your terminal open while you login. Every step of the OAuth flow is logged with clear labels so you can see exactly what's happening behind the scenes.</p>
         </div>
         {% endif %}
 
         <footer>
             <p>
-                <a href="https://github.com/pranavkumaarofficial/oauth-for-dummies">⭐ Star on GitHub</a>
-                &nbsp;·&nbsp;
-                <a href="https://github.com/pranavkumaarofficial/oauth-for-dummies/blob/main/docs/tutorial.md">📖 Tutorial</a>
-                &nbsp;·&nbsp;
+                <a href="https://github.com/pranavkumaarofficial/oauth-for-dummies">Star on GitHub</a>
+                &nbsp;&middot;&nbsp;
+                <a href="https://github.com/pranavkumaarofficial/oauth-for-dummies/blob/main/docs/tutorial.md">Tutorial</a>
+                &nbsp;&middot;&nbsp;
                 MIT License
             </p>
         </footer>

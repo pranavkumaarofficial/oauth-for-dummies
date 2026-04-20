@@ -9,8 +9,8 @@
 <body>
     <div class="container">
         <header class="hero hero-small">
-            <a href="/" class="back-link">← Back to home</a>
-            <h1>🎉 OAuth worked!</h1>
+            <a href="/" class="back-link">Back to home</a>
+            <h1>OAuth worked</h1>
             <p class="tagline">Here's the data your app received from {{ user.provider | capitalize }}.</p>
         </header>
 
@@ -48,23 +48,23 @@
         </div>
 
         <div class="card hint-card">
-            <p>👆 <strong>This is real data</strong> fetched from the {{ user.provider | capitalize }} API using the access token your app received through the OAuth flow. Check your terminal to see every HTTP request that happened.</p>
+            <p><strong>This is real data</strong> fetched from the {{ user.provider | capitalize }} API using the access token your app received through the OAuth flow. Check your terminal to see every HTTP request that happened.</p>
         </div>
 
         <div class="card">
-            <h2>What just happened?</h2>
+            <h2>What just happened</h2>
             <div class="flow-summary">
-                <div class="flow-step done">✅ You clicked "Login with {{ user.provider | capitalize }}"</div>
-                <div class="flow-arrow">↓</div>
-                <div class="flow-step done">✅ {{ user.provider | capitalize }} asked you to authorize the app</div>
-                <div class="flow-arrow">↓</div>
-                <div class="flow-step done">✅ {{ user.provider | capitalize }} sent back an authorization code</div>
-                <div class="flow-arrow">↓</div>
-                <div class="flow-step done">✅ Your app exchanged the code for an access token</div>
-                <div class="flow-arrow">↓</div>
-                <div class="flow-step done">✅ Your app used the token to fetch your profile from the API</div>
-                <div class="flow-arrow">↓</div>
-                <div class="flow-step done">✅ You're looking at the result right now!</div>
+                <div class="flow-step done">You clicked "Continue with {{ user.provider | capitalize }}"</div>
+                <div class="flow-arrow">|</div>
+                <div class="flow-step done">{{ user.provider | capitalize }} asked you to authorize the app</div>
+                <div class="flow-arrow">|</div>
+                <div class="flow-step done">{{ user.provider | capitalize }} sent back an authorization code</div>
+                <div class="flow-arrow">|</div>
+                <div class="flow-step done">Your app exchanged the code for an access token</div>
+                <div class="flow-arrow">|</div>
+                <div class="flow-step done">Your app used the token to fetch your profile from the API</div>
+                <div class="flow-arrow">|</div>
+                <div class="flow-step done">You're looking at the result right now</div>
             </div>
         </div>
 
@@ -74,8 +74,8 @@
 
         <footer>
             <p>
-                <a href="https://github.com/pranavkumaarofficial/oauth-for-dummies">⭐ Star on GitHub</a>
-                &nbsp;·&nbsp;
+                <a href="https://github.com/pranavkumaarofficial/oauth-for-dummies">Star on GitHub</a>
+                &nbsp;&middot;&nbsp;
                 <a href="/">Home</a>
             </p>
         </footer>
