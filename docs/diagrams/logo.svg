@@ -1,12 +1,18 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 100">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 140">
   <defs>
-    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="0%">
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0f1117;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1a1b26;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
       <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#8b5cf6;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#8b5cf6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#a78bfa;stop-opacity:1" />
     </linearGradient>
   </defs>
-  <rect width="420" height="100" rx="16" fill="#0f1117"/>
-  <text x="20" y="62" font-family="system-ui, -apple-system, sans-serif" font-size="38" font-weight="700" fill="url(#grad)">🔐 OAuth</text>
-  <text x="218" y="62" font-family="system-ui, -apple-system, sans-serif" font-size="38" font-weight="700" fill="#e4e4e7"> for Dummies</text>
-  <text x="20" y="85" font-family="system-ui, -apple-system, sans-serif" font-size="13" fill="#8b8fa3">Learn OAuth 2.0 the easy way — FastAPI starter kit</text>
+  <rect width="600" height="140" rx="20" fill="url(#bg)"/>
+  <rect x="24" y="24" width="4" height="92" rx="2" fill="url(#accent)"/>
+  <text x="48" y="65" font-family="system-ui, -apple-system, sans-serif" font-size="44" font-weight="800" fill="#f4f4f5" letter-spacing="-1">OAuth for Dummies</text>
+  <text x="48" y="100" font-family="system-ui, -apple-system, sans-serif" font-size="17" fill="#8b8fa3">Add OAuth login to your FastAPI app in one command</text>
+  <text x="540" y="72" font-family="system-ui, -apple-system, sans-serif" font-size="48">&#x1F510;</text>
 </svg>

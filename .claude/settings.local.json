@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pip install:*)",
+      "Bash(oauth-init:*)",
+      "Bash(python -c:*)",
+      "Bash(python -m pytest:*)",
+      "Bash(python -m build:*)",
+      "WebFetch(domain:www.markepear.dev)"
+    ]
+  }
+}
