@@ -1,18 +1,28 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 140">
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="140" viewBox="0 0 600 140">
   <defs>
-    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#0f1117;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#1a1b26;stop-opacity:1" />
+    <linearGradient id="bg" x1="0" y1="0" x2="600" y2="140" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0f1117"/>
+      <stop offset="1" stop-color="#1a1b26"/>
     </linearGradient>
-    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1" />
-      <stop offset="50%" style="stop-color:#8b5cf6;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#a78bfa;stop-opacity:1" />
+    <linearGradient id="accent" x1="0" y1="0" x2="0" y2="92" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#6366f1"/>
+      <stop offset="0.5" stop-color="#8b5cf6"/>
+      <stop offset="1" stop-color="#a78bfa"/>
+    </linearGradient>
+    <linearGradient id="lock" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fbbf24"/>
+      <stop offset="1" stop-color="#f59e0b"/>
     </linearGradient>
   </defs>
-  <rect width="600" height="140" rx="20" fill="url(#bg)"/>
-  <rect x="24" y="24" width="4" height="92" rx="2" fill="url(#accent)"/>
-  <text x="48" y="65" font-family="system-ui, -apple-system, sans-serif" font-size="44" font-weight="800" fill="#f4f4f5" letter-spacing="-1">OAuth for Dummies</text>
-  <text x="48" y="100" font-family="system-ui, -apple-system, sans-serif" font-size="17" fill="#8b8fa3">Add OAuth login to your FastAPI app in one command</text>
-  <text x="540" y="72" font-family="system-ui, -apple-system, sans-serif" font-size="48">&#x1F510;</text>
+  <rect width="600" height="140" rx="16" fill="url(#bg)"/>
+  <rect x="24" y="24" width="5" height="92" rx="2.5" fill="url(#accent)"/>
+  <!-- Lock icon -->
+  <rect x="520" y="38" width="36" height="28" rx="4" fill="url(#lock)"/>
+  <rect x="531" y="26" width="14" height="16" rx="7" fill="none" stroke="#fbbf24" stroke-width="3.5"/>
+  <circle cx="538" cy="52" r="3" fill="#0f1117"/>
+  <rect x="536.5" y="52" width="3" height="6" rx="1" fill="#0f1117"/>
+  <!-- Title -->
+  <text x="48" y="62" font-family="Arial, Helvetica, sans-serif" font-size="42" font-weight="bold" fill="#f4f4f5">OAuth for Dummies</text>
+  <!-- Subtitle -->
+  <text x="48" y="98" font-family="Arial, Helvetica, sans-serif" font-size="16" fill="#8b8fa3">Add OAuth login to your FastAPI app in one command</text>
 </svg>
