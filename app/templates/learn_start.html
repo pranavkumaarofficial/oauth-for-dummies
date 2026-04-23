@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Learn Mode — {{ app_name }}</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="hero hero-small">
+            <a href="/" class="back-link">Back to home</a>
+            <h1>Learn Mode</h1>
+            <p class="tagline">Step-by-step OAuth with {{ provider_display }}</p>
+        </header>
+
+        <!-- Progress -->
+        <div class="debugger-progress">
+            <div class="debugger-progress-step active">1. Authorize</div>
+            <div class="debugger-progress-step">2. Callback</div>
+            <div class="debugger-progress-step">3. Token</div>
+            <div class="debugger-progress-step">4. User Info</div>
+            <div class="debugger-progress-step">5. Profile</div>
+        </div>
+
+        <!-- Step 1 -->
+        <div class="card">
+            <h2>Step 1 — Authorization Request</h2>
+            <p>Your app is about to redirect you to {{ provider_display }}. Here is the URL it constructed:</p>
+
+            <div class="http-request">
+                <span class="http-method">GET</span>
+                <span class="http-url">{{ authorize_url }}</span>
+            </div>
+
+            <p class="section-label">Query parameters:</p>
+            <table class="param-table">
+                {% for key, value in params.items() %}
+                <tr>
+                    <td class="param-key">{{ key }}</td>
+                    <td class="param-value">{{ value }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+
+            <details class="explainer">
+                <summary>What do these parameters mean?</summary>
+                <div class="explainer-content">
+                    <p><code>client_id</code> identifies your application. You got this when you registered your OAuth app with {{ provider_display }}.</p>
+                    <p><code>redirect_uri</code> is where {{ provider_display }} sends the user back after they approve. It must match exactly what you registered.</p>
+                    <p><code>scope</code> defines what permissions you are requesting. The user will see these before approving.</p>
+                    <p><code>state</code> is a random token your app generates. When {{ provider_display }} redirects back, it includes this same value. Your app checks that it matches — this prevents CSRF attacks.</p>
+                    <p><code>response_type=code</code> means you are using the Authorization Code flow, the most secure option for server-side apps.</p>
+                </div>
+            </details>
+        </div>
+
+        <div class="card hint-card">
+            <p><strong>What happens next:</strong> You will be redirected to {{ provider_display }}. They will ask you to authorize this app. After you click "Authorize", {{ provider_display }} will redirect you back here with an authorization code.</p>
+        </div>
+
+        <div class="actions" style="justify-content: center;">
+            <a href="{{ full_url }}" class="btn btn-primary">
+                Redirect me to {{ provider_display }}
+            </a>
+        </div>
+
+        <footer>
+            <p>
+                <a href="/">Cancel</a>
+                &nbsp;&middot;&nbsp;
+                <a href="https://github.com/pranavkumaarofficial/oauth-for-dummies">GitHub</a>
+            </p>
+        </footer>
+    </div>
+</body>
+</html>
