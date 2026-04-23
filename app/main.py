@@ -16,6 +16,7 @@ from fastapi.templating import Jinja2Templates
 
 from app.config import settings
 from app.auth.routes import router as auth_router
+from app.learn.routes import router as learn_router
 from app.auth.storage import store
 from providers.registry import list_providers
 
@@ -31,8 +32,9 @@ BASE_DIR = Path(__file__).resolve().parent
 app.mount("/static", StaticFiles(directory=BASE_DIR / "static"), name="static")
 templates = Jinja2Templates(directory=BASE_DIR / "templates")
 
-# Register auth routes
+# Register routes
 app.include_router(auth_router)
+app.include_router(learn_router)
 
 
 # ---- Pages ----
@@ -115,13 +117,13 @@ async def startup():
     configured = [p for p in providers if p["configured"]]
 
     print(f"\n{'='*60}")
-    print(f"  🔐 {settings.APP_NAME}")
+    print(f"  {settings.APP_NAME}")
     print(f"{'='*60}")
     print(f"  Server:    {settings.base_url}")
     print(f"  Providers: {len(configured)}/{len(providers)} configured")
     for p in providers:
-        status = "✅" if p["configured"] else "⚠️  not configured"
-        print(f"    {p['icon']}  {p['display_name']}: {status}")
+        status = "ready" if p["configured"] else "not configured"
+        print(f"    - {p['display_name']}: {status}")
     print(f"{'='*60}")
     print(f"  Open {settings.base_url} in your browser to start!")
     print(f"{'='*60}\n")

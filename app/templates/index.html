@@ -37,15 +37,20 @@
 
             <div class="provider-list">
                 {% for p in providers %}
-                <a href="/auth/{{ p.name }}/login"
-                   class="btn btn-provider btn-{{ p.name }} {% if not p.configured %}btn-disabled{% endif %}"
-                   {% if not p.configured %}onclick="event.preventDefault(); alert('{{ p.display_name }} is not configured. Add {{ p.name | upper }}_CLIENT_ID and {{ p.name | upper }}_CLIENT_SECRET to your .env file.')"{% endif %}>
-                    <span class="provider-icon">{{ p.icon }}</span>
-                    <span>Continue with {{ p.display_name }}</span>
-                    {% if not p.configured %}
-                    <span class="badge">not configured</span>
+                <div class="provider-row">
+                    <a href="/auth/{{ p.name }}/login"
+                       class="btn btn-provider btn-{{ p.name }} {% if not p.configured %}btn-disabled{% endif %}"
+                       {% if not p.configured %}onclick="event.preventDefault(); alert('{{ p.display_name }} is not configured. Add {{ p.name | upper }}_CLIENT_ID and {{ p.name | upper }}_CLIENT_SECRET to your .env file.')"{% endif %}>
+                        <span class="provider-icon">{{ p.icon | safe }}</span>
+                        <span>Continue with {{ p.display_name }}</span>
+                        {% if not p.configured %}
+                        <span class="badge">not configured</span>
+                        {% endif %}
+                    </a>
+                    {% if p.configured %}
+                    <a href="/auth/{{ p.name }}/login?mode=learn" class="btn btn-outline btn-learn">Learn Mode</a>
                     {% endif %}
-                </a>
+                </div>
                 {% endfor %}
             </div>
         </div>
@@ -85,7 +90,7 @@
         </div>
 
         <div class="card hint-card">
-            <p><strong>Tip:</strong> Keep your terminal open while you login. Every step of the OAuth flow is logged with clear labels so you can see exactly what's happening behind the scenes.</p>
+            <p><strong>Tip:</strong> Use <strong>Learn Mode</strong> to see every step of the OAuth flow explained in the UI — authorization URL, callback, token exchange, and API calls with real data. Or use the quick flow and watch the terminal for step-by-step logs.</p>
         </div>
         {% endif %}
 

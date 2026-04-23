@@ -20,28 +20,28 @@ STYLE = """
 <style>
   @import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&display=swap');
   * {{ margin: 0; padding: 0; box-sizing: border-box; }}
-  body {{ font-family: 'DM Sans', system-ui, sans-serif; background: #fffbff; color: #1c1b1f;
-         max-width: 480px; margin: 0 auto; padding: 3rem 1.5rem; -webkit-font-smoothing: antialiased; }}
-  h1 {{ font-size: 1.75rem; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 0.25rem; }}
-  .sub {{ color: #49454f; font-size: 0.95rem; margin-bottom: 2rem; }}
-  .btn {{ display: block; width: 100%; padding: 0.9rem 1.5rem; margin-bottom: 0.5rem;
-          border-radius: 28px; text-decoration: none; font-weight: 500; font-size: 0.9rem;
-          font-family: inherit; text-align: center; transition: all 0.15s; }}
-  .btn-github {{ background: #24292e; color: #fff; }}
-  .btn-github:hover {{ background: #333940; }}
-  .btn-google {{ background: #fff; color: #1c1b1f; border: 1px solid #e0dce0; }}
-  .btn-google:hover {{ background: #f4f1f4; }}
-  .card {{ background: #fff; border: 1px solid #e0dce0; border-radius: 16px; padding: 1.5rem;
+  body {{ font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif; background: #f6f8fa;
+         color: #1f2328; max-width: 480px; margin: 0 auto; padding: 3rem 1.25rem; -webkit-font-smoothing: antialiased; }}
+  h1 {{ font-size: 1.75rem; font-weight: 700; letter-spacing: -0.025em; margin-bottom: 0.25rem; }}
+  .sub {{ color: #59636e; font-size: 0.95rem; margin-bottom: 1.75rem; }}
+  .btn {{ display: block; width: 100%; padding: 0.7rem 1rem; margin-bottom: 0.5rem;
+          border-radius: 6px; text-decoration: none; font-weight: 500; font-size: 0.9rem;
+          font-family: inherit; text-align: center; transition: all 0.12s; border: 1px solid transparent; }}
+  .btn-github {{ background: #24292f; color: #fff; border-color: #24292f; }}
+  .btn-github:hover {{ background: #32383f; }}
+  .btn-google {{ background: #fff; color: #1f2328; border: 1px solid #d1d9e0; }}
+  .btn-google:hover {{ background: #f3f4f6; }}
+  .card {{ background: #fff; border: 1px solid #d1d9e0; border-radius: 12px; padding: 1.5rem;
            margin-top: 1.5rem; text-align: center; }}
-  img.avatar {{ width: 72px; height: 72px; border-radius: 50%; margin-bottom: 0.75rem; }}
+  img.avatar {{ width: 72px; height: 72px; border-radius: 50%; border: 2px solid #d1d9e0; margin-bottom: 0.75rem; }}
   .name {{ font-size: 1.1rem; font-weight: 700; }}
-  .meta {{ color: #49454f; font-size: 0.85rem; margin-top: 0.25rem; }}
-  a.logout {{ display: inline-block; margin-top: 1rem; color: #6750a4; text-decoration: none;
+  .meta {{ color: #59636e; font-size: 0.85rem; margin-top: 0.25rem; }}
+  a.logout {{ display: inline-block; margin-top: 1rem; color: #0969da; text-decoration: none;
               font-weight: 500; font-size: 0.85rem; }}
   a.logout:hover {{ text-decoration: underline; }}
-  .footer {{ text-align: center; margin-top: 2.5rem; color: #79747e; font-size: 0.8rem; }}
-  .footer a {{ color: #79747e; text-decoration: none; }}
-  .footer a:hover {{ color: #1c1b1f; }}
+  .footer {{ text-align: center; margin-top: 2.5rem; color: #818b98; font-size: 0.8rem; }}
+  .footer a {{ color: #818b98; text-decoration: none; }}
+  .footer a:hover {{ color: #0969da; }}
 </style>
 """
 
@@ -92,7 +92,7 @@ async def home(request: Request):
 async def profile(request: Request):
     user = get_session(request)
     if not user:
-        return HTMLResponse("<p style='font-family:DM Sans,system-ui,sans-serif;padding:3rem;'>Not signed in. <a href='/'>Go back</a></p>", status_code=401)
+        return HTMLResponse("<p style='font-family:DM Sans,system-ui,sans-serif;padding:3rem;color:#1f2328;'>Not signed in. <a href='/' style='color:#0969da;'>Go back</a></p>", status_code=401)
 
     return PROFILE_PAGE.format(
         style=STYLE,

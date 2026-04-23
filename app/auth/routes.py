@@ -2,11 +2,11 @@
 Auth Routes — handles the OAuth login flow.
 
 Two routes per provider:
-  1. GET /auth/{provider}/login    → redirects user to the provider
-  2. GET /auth/{provider}/callback → handles the redirect back
+  1. GET /auth/{provider}/login    -> redirects user to the provider
+  2. GET /auth/{provider}/callback -> handles the redirect back
 
 Plus:
-  GET /auth/logout → clears the session
+  GET /auth/logout -> clears the session
 """
 
 from __future__ import annotations
@@ -17,13 +17,13 @@ from fastapi import APIRouter, Request, HTTPException
 from fastapi.responses import RedirectResponse
 
 from providers.registry import get_provider
-from app.auth.storage import store, StoredSession
+from app.auth.storage import store, StoredSession, DebugSession
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 @router.get("/{provider_name}/login")
-async def login(provider_name: str, request: Request):
+async def login(provider_name: str, request: Request, mode: str = "quick"):
     """
     STEP 1: Start the OAuth flow.
 
@@ -31,19 +31,29 @@ async def login(provider_name: str, request: Request):
     1. Creates a state token (prevents CSRF attacks)
     2. Builds the authorization URL
     3. Redirects the user to the provider's login page
+
+    If mode=learn, redirects to the pre-flight page first.
     """
     try:
         provider = get_provider(provider_name)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-    auth_url, state = provider.get_authorization_url()
-
-    # Remember the state so we can verify it when the user comes back
-    store.save_state(state, provider_name)
-
-    print(f"\n  🚀 Redirecting user to {provider.display_name}...\n")
-    return RedirectResponse(url=auth_url)
+    if mode == "learn":
+        details = provider.get_authorization_url_detailed()
+        state = details["state"]
+        store.save_state(state, provider_name, mode="learn")
+        store.save_learn_preflight(state, details)
+        print(f"\n  Learn mode: showing pre-flight for {provider.display_name}...\n")
+        return RedirectResponse(
+            url=f"/learn/{provider_name}/start?state={state}",
+            status_code=303,
+        )
+    else:
+        auth_url, state = provider.get_authorization_url()
+        store.save_state(state, provider_name)
+        print(f"\n  Redirecting user to {provider.display_name}...\n")
+        return RedirectResponse(url=auth_url)
 
 
 @router.get("/{provider_name}/callback")
@@ -64,20 +74,24 @@ async def callback(provider_name: str, request: Request, code: str = "", state: 
     # ---- Verify state (CSRF protection) ----
     saved_provider = store.verify_state(state)
     if saved_provider is None:
-        print("  ❌ CSRF check failed! Unknown state token.")
+        print("  CSRF check failed! Unknown state token.")
         raise HTTPException(
             status_code=400,
             detail="Invalid state parameter. This could be a CSRF attack. Try logging in again.",
         )
     if saved_provider != provider_name:
-        print(f"  ❌ State mismatch: expected {saved_provider}, got {provider_name}")
+        print(f"  State mismatch: expected {saved_provider}, got {provider_name}")
         raise HTTPException(status_code=400, detail="Provider mismatch.")
 
+    # Check if this was a learn-mode flow
+    mode = store.get_state_mode(state)
+
     print(f"\n{'='*60}")
-    print(f"  📨 STEP 2 — Callback received from {provider_name}")
+    print(f"  STEP 2 — Callback received from {provider_name}")
     print(f"{'='*60}")
     print(f"  code:  {code[:16]}...")
-    print(f"  state: {state[:16]}... ✅ verified")
+    print(f"  state: {state[:16]}... verified")
+    print(f"  mode:  {mode}")
     print(f"{'='*60}\n")
 
     if not code:
@@ -88,27 +102,32 @@ async def callback(provider_name: str, request: Request, code: str = "", state: 
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-    # ---- Exchange code for token ----
+    if mode == "learn":
+        return await _handle_learn_callback(provider, provider_name, code, state)
+    else:
+        return await _handle_quick_callback(provider, provider_name, code)
+
+
+async def _handle_quick_callback(provider, provider_name: str, code: str):
+    """Standard fast login — redirect straight to /profile."""
     try:
         token = await provider.exchange_code_for_token(code)
     except Exception as e:
-        print(f"  ❌ Token exchange failed: {e}")
+        print(f"  Token exchange failed: {e}")
         raise HTTPException(
             status_code=400,
             detail=f"Failed to exchange code for token: {e}",
         )
 
-    # ---- Fetch user info ----
     try:
         user = await provider.get_userinfo(token)
     except Exception as e:
-        print(f"  ❌ Failed to fetch user info: {e}")
+        print(f"  Failed to fetch user info: {e}")
         raise HTTPException(
             status_code=400,
             detail=f"Failed to fetch user info: {e}",
         )
 
-    # ---- Create session ----
     session_id = secrets.token_urlsafe(32)
     session = StoredSession(
         session_id=session_id,
@@ -121,15 +140,92 @@ async def callback(provider_name: str, request: Request, code: str = "", state: 
     )
     store.save_session(session)
 
-    print(f"\n  🎉 Login complete! Welcome, {user.name}!\n")
+    print(f"\n  Login complete! Welcome, {user.name}\n")
 
-    # Redirect to profile page with session cookie
     response = RedirectResponse(url="/profile", status_code=303)
     response.set_cookie(
         key="session_id",
         value=session_id,
         httponly=True,
-        max_age=3600,  # 1 hour
+        max_age=3600,
+        samesite="lax",
+    )
+    return response
+
+
+async def _handle_learn_callback(provider, provider_name: str, code: str, state: str):
+    """Learn mode — capture all data and redirect to /learn/{provider}/result."""
+    try:
+        token_details = await provider.exchange_code_for_token_detailed(code)
+    except Exception as e:
+        print(f"  Token exchange failed: {e}")
+        raise HTTPException(
+            status_code=400,
+            detail=f"Failed to exchange code for token: {e}",
+        )
+
+    token = token_details["token"]
+
+    try:
+        user_details = await provider.get_userinfo_detailed(token)
+    except Exception as e:
+        print(f"  Failed to fetch user info: {e}")
+        raise HTTPException(
+            status_code=400,
+            detail=f"Failed to fetch user info: {e}",
+        )
+
+    user = user_details["user"]
+
+    # Create normal session (user is logged in)
+    session_id = secrets.token_urlsafe(32)
+    session = StoredSession(
+        session_id=session_id,
+        provider=provider_name,
+        access_token=token.access_token,
+        user_id=user.id,
+        user_name=user.name,
+        user_email=user.email,
+        user_avatar=user.avatar,
+    )
+    store.save_session(session)
+
+    # Get preflight data for Step 1 display
+    preflight = store.get_learn_preflight(state) or {}
+    store.cleanup_learn_preflight(state)
+
+    # Create debug session with all captured data
+    debug = DebugSession(
+        session_id=session_id,
+        provider=provider_name,
+        authorize_url=preflight.get("base_url", ""),
+        authorize_params=preflight.get("params", {}),
+        full_authorize_url=preflight.get("url", ""),
+        callback_code=code[:16] + "...",
+        callback_state=state[:16] + "...",
+        token_request_url=token_details["request_url"],
+        token_request_body=token_details["request_body"],
+        token_response_raw=token_details["response_raw"],
+        token_type=token.token_type,
+        token_scope=token.scope,
+        userinfo_request_url=user_details["request_url"],
+        userinfo_request_headers=user_details["request_headers"],
+        userinfo_response_raw=user_details["response_raw"],
+        user_id=user.id,
+        user_name=user.name,
+        user_email=user.email,
+        user_avatar=user.avatar,
+    )
+    store.save_debug_session(debug)
+
+    print(f"\n  Learn mode complete! Welcome, {user.name}\n")
+
+    response = RedirectResponse(url=f"/learn/{provider_name}/result", status_code=303)
+    response.set_cookie(
+        key="session_id",
+        value=session_id,
+        httponly=True,
+        max_age=3600,
         samesite="lax",
     )
     return response
@@ -141,7 +237,7 @@ async def logout(request: Request):
     session_id = request.cookies.get("session_id")
     if session_id:
         store.delete_session(session_id)
-        print(f"  👋 User logged out (session: {session_id[:8]}...)")
+        print(f"  User logged out (session: {session_id[:8]}...)")
 
     response = RedirectResponse(url="/", status_code=303)
     response.delete_cookie("session_id")

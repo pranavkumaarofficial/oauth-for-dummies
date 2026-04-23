@@ -83,7 +83,7 @@ class OAuthProvider(ABC):
         url = f"{self.authorize_url}?{urlencode(params)}"
 
         print(f"\n{'='*60}")
-        print(f"  🔗 STEP 1 — Redirect user to {self.display_name}")
+        print(f"  STEP 1 — Redirect user to {self.display_name}")
         print(f"{'='*60}")
         print(f"  URL: {self.authorize_url}")
         print(f"  client_id:    {self.client_id[:8]}...")
@@ -110,7 +110,7 @@ class OAuthProvider(ABC):
         }
 
         print(f"\n{'='*60}")
-        print(f"  🔄 STEP 3 — Exchange code for token")
+        print(f"  STEP 3 — Exchange code for token")
         print(f"{'='*60}")
         print(f"  POST {self.token_url}")
         print(f"  code:   {code[:16]}...")
@@ -135,7 +135,7 @@ class OAuthProvider(ABC):
             raw=raw,
         )
 
-        print(f"  ✅ Got access token: {token.access_token[:12]}...")
+        print(f"  Got access token: {token.access_token[:12]}...")
         print(f"  Token type: {token.token_type}")
         print(f"  Scope: {token.scope}\n")
 
@@ -148,7 +148,7 @@ class OAuthProvider(ABC):
         This is the "payoff" — the whole reason we did OAuth.
         """
         print(f"\n{'='*60}")
-        print(f"  📡 STEP 4 — Fetch user info from {self.display_name}")
+        print(f"  STEP 4 — Fetch user info from {self.display_name}")
         print(f"{'='*60}")
         print(f"  GET {self.userinfo_url}")
         print(f"  Authorization: Bearer {token.access_token[:12]}...")
@@ -166,7 +166,7 @@ class OAuthProvider(ABC):
         user.provider = self.name
         user.raw = raw
 
-        print(f"  ✅ Got user info:")
+        print(f"  Got user info:")
         print(f"     Name:   {user.name}")
         print(f"     Email:  {user.email or 'not provided'}")
         print(f"     Avatar: {user.avatar[:40] + '...' if user.avatar else 'none'}\n")
@@ -182,3 +182,138 @@ class OAuthProvider(ABC):
         This method maps their format to ours.
         """
         ...
+
+    # ---- Detailed methods for Learn Mode debugger ----
+
+    def get_authorization_url_detailed(self, state: str | None = None) -> dict:
+        """Like get_authorization_url, but returns all intermediate data."""
+        if state is None:
+            state = secrets.token_urlsafe(32)
+
+        params = {
+            "client_id": self.client_id,
+            "redirect_uri": self.redirect_uri,
+            "scope": " ".join(self.default_scopes),
+            "state": state,
+            "response_type": "code",
+        }
+        url = f"{self.authorize_url}?{urlencode(params)}"
+
+        print(f"\n{'='*60}")
+        print(f"  STEP 1 — Redirect user to {self.display_name}")
+        print(f"{'='*60}")
+        print(f"  URL: {self.authorize_url}")
+        print(f"  client_id:    {self.client_id[:8]}...")
+        print(f"  redirect_uri: {self.redirect_uri}")
+        print(f"  scope:        {' '.join(self.default_scopes)}")
+        print(f"  state:        {state[:16]}...")
+        print(f"{'='*60}\n")
+
+        # Redact client_id for display
+        display_params = dict(params)
+        display_params["client_id"] = self.client_id[:8] + "..."
+
+        return {
+            "url": url,
+            "state": state,
+            "params": display_params,
+            "base_url": self.authorize_url,
+        }
+
+    async def exchange_code_for_token_detailed(self, code: str) -> dict:
+        """Like exchange_code_for_token, but captures request/response data."""
+        data = {
+            "client_id": self.client_id,
+            "client_secret": self.client_secret,
+            "code": code,
+            "redirect_uri": self.redirect_uri,
+            "grant_type": "authorization_code",
+        }
+
+        print(f"\n{'='*60}")
+        print(f"  STEP 3 — Exchange code for token")
+        print(f"{'='*60}")
+        print(f"  POST {self.token_url}")
+        print(f"  code:   {code[:16]}...")
+        print(f"  secret: {self.client_secret[:4]}{'*' * 12}")
+        print(f"{'='*60}\n")
+
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                self.token_url,
+                data=data,
+                headers={"Accept": "application/json"},
+            )
+            response.raise_for_status()
+            raw = response.json()
+
+        token = OAuthToken(
+            access_token=raw["access_token"],
+            token_type=raw.get("token_type", "bearer"),
+            scope=raw.get("scope", ""),
+            refresh_token=raw.get("refresh_token"),
+            expires_in=raw.get("expires_in"),
+            raw=raw,
+        )
+
+        print(f"  Got access token: {token.access_token[:12]}...")
+        print(f"  Token type: {token.token_type}")
+        print(f"  Scope: {token.scope}\n")
+
+        # Redacted versions for UI display
+        display_body = {
+            "client_id": self.client_id[:8] + "...",
+            "client_secret": self.client_secret[:4] + "************",
+            "code": code[:16] + "...",
+            "redirect_uri": self.redirect_uri,
+            "grant_type": "authorization_code",
+        }
+        display_response = {
+            "access_token": token.access_token[:12] + "...",
+            "token_type": token.token_type,
+            "scope": token.scope,
+        }
+        if token.expires_in:
+            display_response["expires_in"] = token.expires_in
+
+        return {
+            "token": token,
+            "request_url": self.token_url,
+            "request_body": display_body,
+            "response_raw": display_response,
+        }
+
+    async def get_userinfo_detailed(self, token: OAuthToken) -> dict:
+        """Like get_userinfo, but captures request/response data."""
+        print(f"\n{'='*60}")
+        print(f"  STEP 4 — Fetch user info from {self.display_name}")
+        print(f"{'='*60}")
+        print(f"  GET {self.userinfo_url}")
+        print(f"  Authorization: Bearer {token.access_token[:12]}...")
+        print(f"{'='*60}\n")
+
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                self.userinfo_url,
+                headers={"Authorization": f"Bearer {token.access_token}"},
+            )
+            response.raise_for_status()
+            raw = response.json()
+
+        user = self.normalize_userinfo(raw)
+        user.provider = self.name
+        user.raw = raw
+
+        print(f"  Got user info:")
+        print(f"     Name:   {user.name}")
+        print(f"     Email:  {user.email or 'not provided'}")
+        print(f"     Avatar: {user.avatar[:40] + '...' if user.avatar else 'none'}\n")
+
+        return {
+            "user": user,
+            "request_url": self.userinfo_url,
+            "request_headers": {
+                "Authorization": f"Bearer {token.access_token[:12]}...",
+            },
+            "response_raw": raw,
+        }
