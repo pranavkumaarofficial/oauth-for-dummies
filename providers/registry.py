@@ -10,6 +10,10 @@ from __future__ import annotations
 from providers.base import OAuthProvider
 from providers.github import GitHubProvider
 from providers.google import GoogleProvider
+from providers.discord import DiscordProvider
+from providers.spotify import SpotifyProvider
+from providers.microsoft import MicrosoftProvider
+from providers.linkedin import LinkedInProvider
 from app.config import settings
 
 
@@ -26,6 +30,26 @@ _PROVIDER_CONFIGS: dict[str, dict] = {
         "class": GoogleProvider,
         "client_id": settings.GOOGLE_CLIENT_ID,
         "client_secret": settings.GOOGLE_CLIENT_SECRET,
+    },
+    "discord": {
+        "class": DiscordProvider,
+        "client_id": settings.DISCORD_CLIENT_ID,
+        "client_secret": settings.DISCORD_CLIENT_SECRET,
+    },
+    "spotify": {
+        "class": SpotifyProvider,
+        "client_id": settings.SPOTIFY_CLIENT_ID,
+        "client_secret": settings.SPOTIFY_CLIENT_SECRET,
+    },
+    "microsoft": {
+        "class": MicrosoftProvider,
+        "client_id": settings.MICROSOFT_CLIENT_ID,
+        "client_secret": settings.MICROSOFT_CLIENT_SECRET,
+    },
+    "linkedin": {
+        "class": LinkedInProvider,
+        "client_id": settings.LINKEDIN_CLIENT_ID,
+        "client_secret": settings.LINKEDIN_CLIENT_SECRET,
     },
 }
 

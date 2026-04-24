@@ -42,7 +42,8 @@ async def login(provider_name: str, request: Request, mode: str = "quick"):
     if mode == "learn":
         details = provider.get_authorization_url_detailed()
         state = details["state"]
-        store.save_state(state, provider_name, mode="learn")
+        code_verifier = details.get("code_verifier")
+        store.save_state(state, provider_name, mode="learn", code_verifier=code_verifier)
         store.save_learn_preflight(state, details)
         print(f"\n  Learn mode: showing pre-flight for {provider.display_name}...\n")
         return RedirectResponse(
@@ -50,8 +51,13 @@ async def login(provider_name: str, request: Request, mode: str = "quick"):
             status_code=303,
         )
     else:
-        auth_url, state = provider.get_authorization_url()
-        store.save_state(state, provider_name)
+        result = provider.get_authorization_url()
+        if provider.use_pkce:
+            auth_url, state, code_verifier = result
+        else:
+            auth_url, state = result
+            code_verifier = None
+        store.save_state(state, provider_name, code_verifier=code_verifier)
         print(f"\n  Redirecting user to {provider.display_name}...\n")
         return RedirectResponse(url=auth_url)
 
@@ -85,6 +91,7 @@ async def callback(provider_name: str, request: Request, code: str = "", state: 
 
     # Check if this was a learn-mode flow
     mode = store.get_state_mode(state)
+    code_verifier = store.get_code_verifier(state)
 
     print(f"\n{'='*60}")
     print(f"  STEP 2 — Callback received from {provider_name}")
@@ -92,6 +99,8 @@ async def callback(provider_name: str, request: Request, code: str = "", state: 
     print(f"  code:  {code[:16]}...")
     print(f"  state: {state[:16]}... verified")
     print(f"  mode:  {mode}")
+    if code_verifier:
+        print(f"  PKCE:  code_verifier present")
     print(f"{'='*60}\n")
 
     if not code:
@@ -103,15 +112,15 @@ async def callback(provider_name: str, request: Request, code: str = "", state: 
         raise HTTPException(status_code=400, detail=str(e))
 
     if mode == "learn":
-        return await _handle_learn_callback(provider, provider_name, code, state)
+        return await _handle_learn_callback(provider, provider_name, code, state, code_verifier)
     else:
-        return await _handle_quick_callback(provider, provider_name, code)
+        return await _handle_quick_callback(provider, provider_name, code, code_verifier)
 
 
-async def _handle_quick_callback(provider, provider_name: str, code: str):
+async def _handle_quick_callback(provider, provider_name: str, code: str, code_verifier: str | None = None):
     """Standard fast login — redirect straight to /profile."""
     try:
-        token = await provider.exchange_code_for_token(code)
+        token = await provider.exchange_code_for_token(code, code_verifier=code_verifier)
     except Exception as e:
         print(f"  Token exchange failed: {e}")
         raise HTTPException(
@@ -153,10 +162,10 @@ async def _handle_quick_callback(provider, provider_name: str, code: str):
     return response
 
 
-async def _handle_learn_callback(provider, provider_name: str, code: str, state: str):
+async def _handle_learn_callback(provider, provider_name: str, code: str, state: str, code_verifier: str | None = None):
     """Learn mode — capture all data and redirect to /learn/{provider}/result."""
     try:
-        token_details = await provider.exchange_code_for_token_detailed(code)
+        token_details = await provider.exchange_code_for_token_detailed(code, code_verifier=code_verifier)
     except Exception as e:
         print(f"  Token exchange failed: {e}")
         raise HTTPException(

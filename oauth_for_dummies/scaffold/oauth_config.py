@@ -21,7 +21,6 @@ if os.getenv("GITHUB_CLIENT_ID"):
         "token_url": "https://github.com/login/oauth/access_token",
         "userinfo_url": "https://api.github.com/user",
         "scopes": ["read:user", "user:email"],
-        "icon": "\U0001f419",
         "name": "GitHub",
     }
 
@@ -38,8 +37,55 @@ if os.getenv("GOOGLE_CLIENT_ID"):
             "https://www.googleapis.com/auth/userinfo.email",
             "https://www.googleapis.com/auth/userinfo.profile",
         ],
-        "icon": "\U0001f535",
         "name": "Google",
+    }
+
+# --- Discord ---
+if os.getenv("DISCORD_CLIENT_ID"):
+    OAUTH_PROVIDERS["discord"] = {
+        "client_id": os.getenv("DISCORD_CLIENT_ID", ""),
+        "client_secret": os.getenv("DISCORD_CLIENT_SECRET", ""),
+        "authorize_url": "https://discord.com/oauth2/authorize",
+        "token_url": "https://discord.com/api/oauth2/token",
+        "userinfo_url": "https://discord.com/api/users/@me",
+        "scopes": ["identify", "email"],
+        "name": "Discord",
+    }
+
+# --- Spotify ---
+if os.getenv("SPOTIFY_CLIENT_ID"):
+    OAUTH_PROVIDERS["spotify"] = {
+        "client_id": os.getenv("SPOTIFY_CLIENT_ID", ""),
+        "client_secret": os.getenv("SPOTIFY_CLIENT_SECRET", ""),
+        "authorize_url": "https://accounts.spotify.com/authorize",
+        "token_url": "https://accounts.spotify.com/api/token",
+        "userinfo_url": "https://api.spotify.com/v1/me",
+        "scopes": ["user-read-email", "user-read-private"],
+        "name": "Spotify",
+    }
+
+# --- Microsoft ---
+if os.getenv("MICROSOFT_CLIENT_ID"):
+    OAUTH_PROVIDERS["microsoft"] = {
+        "client_id": os.getenv("MICROSOFT_CLIENT_ID", ""),
+        "client_secret": os.getenv("MICROSOFT_CLIENT_SECRET", ""),
+        "authorize_url": "https://login.microsoftonline.com/common/oauth2/v2.0/authorize",
+        "token_url": "https://login.microsoftonline.com/common/oauth2/v2.0/token",
+        "userinfo_url": "https://graph.microsoft.com/v1.0/me",
+        "scopes": ["openid", "email", "profile", "User.Read"],
+        "name": "Microsoft",
+    }
+
+# --- LinkedIn ---
+if os.getenv("LINKEDIN_CLIENT_ID"):
+    OAUTH_PROVIDERS["linkedin"] = {
+        "client_id": os.getenv("LINKEDIN_CLIENT_ID", ""),
+        "client_secret": os.getenv("LINKEDIN_CLIENT_SECRET", ""),
+        "authorize_url": "https://www.linkedin.com/oauth/v2/authorization",
+        "token_url": "https://www.linkedin.com/oauth/v2/accessToken",
+        "userinfo_url": "https://api.linkedin.com/v2/userinfo",
+        "scopes": ["openid", "profile", "email"],
+        "name": "LinkedIn",
     }
 
 # Base URL for building redirect URIs

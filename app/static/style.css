@@ -251,6 +251,44 @@ body {
     background: var(--surface-hover);
 }
 
+.btn-discord {
+    background: #5865f2;
+    color: #ffffff;
+    border-color: #5865f2;
+}
+.btn-discord:hover {
+    background: #4752c4;
+    border-color: #4752c4;
+}
+
+.btn-spotify {
+    background: #1db954;
+    color: #ffffff;
+    border-color: #1db954;
+}
+.btn-spotify:hover {
+    background: #1aa34a;
+    border-color: #1aa34a;
+}
+
+.btn-microsoft {
+    background: var(--surface);
+    color: var(--text);
+}
+.btn-microsoft:hover {
+    background: var(--surface-hover);
+}
+
+.btn-linkedin {
+    background: #0a66c2;
+    color: #ffffff;
+    border-color: #0a66c2;
+}
+.btn-linkedin:hover {
+    background: #004182;
+    border-color: #004182;
+}
+
 .btn-disabled {
     opacity: 0.35;
     cursor: not-allowed;
@@ -262,6 +300,18 @@ body {
 .btn-github.btn-disabled:hover {
     background: #24292f;
     border-color: #24292f;
+}
+.btn-discord.btn-disabled:hover {
+    background: #5865f2;
+    border-color: #5865f2;
+}
+.btn-spotify.btn-disabled:hover {
+    background: #1db954;
+    border-color: #1db954;
+}
+.btn-linkedin.btn-disabled:hover {
+    background: #0a66c2;
+    border-color: #0a66c2;
 }
 
 .provider-icon {

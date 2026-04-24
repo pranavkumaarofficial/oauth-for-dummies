@@ -88,13 +88,16 @@ class TokenStore:
         self._sessions: dict[str, StoredSession] = {}
         self._states: dict[str, str] = {}  # state -> provider name
         self._state_modes: dict[str, str] = {}  # state -> "learn" or "quick"
+        self._code_verifiers: dict[str, str] = {}  # state -> PKCE code_verifier
         self._debug_sessions: dict[str, DebugSession] = {}
         self._learn_preflights: dict[str, dict] = {}  # state -> auth URL details
 
-    def save_state(self, state: str, provider_name: str, mode: str = "quick") -> None:
+    def save_state(self, state: str, provider_name: str, mode: str = "quick", code_verifier: str | None = None) -> None:
         """Remember the state token so we can verify it on callback."""
         self._states[state] = provider_name
         self._state_modes[state] = mode
+        if code_verifier:
+            self._code_verifiers[state] = code_verifier
 
     def verify_state(self, state: str) -> str | None:
         """
@@ -106,6 +109,10 @@ class TokenStore:
     def get_state_mode(self, state: str) -> str:
         """Get the mode for a state token. Returns 'quick' if not found."""
         return self._state_modes.pop(state, "quick")
+
+    def get_code_verifier(self, state: str) -> str | None:
+        """Get and remove the PKCE code_verifier for a state token."""
+        return self._code_verifiers.pop(state, None)
 
     # ---- Learn mode preflight ----
 

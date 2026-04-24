@@ -1,6 +1,6 @@
 # **OAuth for Dummies**
 
-### Add "Login with GitHub" and "Login with Google" to any FastAPI app in one command.
+### The fastest way to add OAuth login to any FastAPI app. 6 providers, PKCE support, and a built-in OAuth debugger.
 
 <p>
   <a href="https://pypi.org/project/oauth-for-dummies/"><img src="https://img.shields.io/pypi/v/oauth-for-dummies?style=flat-square&logo=pypi&logoColor=white&label=PyPI" alt="PyPI version"/></a>
@@ -10,7 +10,7 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT License"/></a>
 </p>
 
-[Quickstart](#quickstart) | [How OAuth Works](#how-oauth-20-works) | [What is OAuth?](#what-is-oauth-20) | [CLI Reference](#cli-reference) | [Tutorial](#tutorial)
+[Quickstart](#quickstart) | [Providers](#supported-providers) | [OAuth Debugger](#oauth-debugger) | [PKCE / OAuth 2.1](#pkce--oauth-21) | [How OAuth Works](#how-oauth-20-works) | [CLI Reference](#cli-reference) | [Tutorial](#tutorial)
 
 ---
 
@@ -24,6 +24,21 @@ Adding OAuth to a FastAPI app should not take an afternoon. But it does, because
 - Production auth libraries are overkill when you just need "Login with GitHub"
 
 **oauth-for-dummies** solves this. One CLI command drops working OAuth routes into your project. Two lines of code to integrate. Done.
+
+---
+
+## Supported Providers
+
+| Provider | Status | Scopes |
+|----------|--------|--------|
+| **GitHub** | Ready | `read:user`, `user:email` |
+| **Google** | Ready | `openid`, `email`, `profile` |
+| **Discord** | Ready | `identify`, `email` |
+| **Spotify** | Ready | `user-read-email`, `user-read-private` |
+| **Microsoft** | Ready | `openid`, `email`, `profile`, `User.Read` |
+| **LinkedIn** | Ready | `openid`, `profile`, `email` |
+
+All 6 providers work with both the CLI scaffold (`oauth-init`) and the tutorial app. Only configure the ones you need -- unconfigured providers are hidden from the UI.
 
 ---
 
@@ -42,8 +57,8 @@ That scaffolds three files into your project:
 
 ```
 your-fastapi-project/
-  oauth_config.py       # provider credentials from .env
-  oauth_routes.py       # login, callback, logout endpoints
+  oauth_config.py       # provider credentials from .env (6 providers)
+  oauth_routes.py       # login, callback, logout endpoints + PKCE support
   oauth_example_app.py  # working demo app (optional)
   .env                  # template for your OAuth keys
 ```
@@ -64,6 +79,64 @@ pip install fastapi uvicorn httpx python-dotenv
 uvicorn oauth_example_app:app --reload
 # open http://localhost:8000
 ```
+
+---
+
+## OAuth Debugger
+
+The tutorial app includes a built-in **OAuth Debugger** (Learn Mode) that captures and displays every HTTP request and response in the OAuth flow -- in real time, with real data.
+
+Click **Learn Mode** next to any provider to see:
+
+1. **Authorization Request** -- the exact URL your app constructs, with every query parameter explained
+2. **Callback** -- the authorization code and state token received from the provider, with CSRF verification
+3. **Token Exchange** -- the server-to-server POST request body and the token response
+4. **User Info** -- the raw API response from the provider's userinfo endpoint
+5. **Normalized Profile** -- how your app maps provider-specific fields into a standard shape
+
+Each step includes expandable explanations of what happened and why. No black box -- you see exactly what your code is doing.
+
+```bash
+git clone https://github.com/pranavkumaarofficial/oauth-for-dummies.git
+cd oauth-for-dummies
+pip install -e .
+cp .env.example .env
+# add at least one provider's credentials to .env
+uvicorn app.main:app --reload
+# open http://localhost:8000 and click "Learn Mode"
+```
+
+---
+
+## PKCE / OAuth 2.1
+
+The project supports **PKCE** (Proof Key for Code Exchange), the key security improvement in OAuth 2.1. PKCE replaces the client secret with a cryptographic challenge, making OAuth safe for public clients (mobile apps, SPAs).
+
+### How it works
+
+Instead of sending `client_secret` during token exchange, PKCE:
+1. Generates a random `code_verifier` (86 chars)
+2. Hashes it into a `code_challenge` (SHA-256, base64url)
+3. Sends the challenge with the authorization request
+4. Sends the verifier with the token exchange
+5. The provider verifies `SHA256(verifier) == challenge`
+
+### Enable PKCE on any provider
+
+In the tutorial app, add one line to any provider class:
+
+```python
+class MyProvider(OAuthProvider):
+    use_pkce = True  # that's it
+```
+
+In the scaffold, add the provider key to the `PKCE_PROVIDERS` set in `oauth_routes.py`:
+
+```python
+PKCE_PROVIDERS = {"my_provider"}
+```
+
+The Learn Mode debugger shows PKCE parameters (code_challenge, code_verifier) when enabled.
 
 ---
 
@@ -130,28 +203,53 @@ sequenceDiagram
 | **State Parameter** | A random string your app generates to prevent CSRF attacks. Verified on callback. |
 | **Scopes** | Permissions you request. `read:user` = profile info, `user:email` = email address. |
 | **Redirect URI** | The URL the provider sends the user back to. Must match exactly what you registered. |
+| **PKCE** | Proof Key for Code Exchange. Replaces client_secret with a cryptographic challenge. Required in OAuth 2.1. |
 
 ---
 
 ## Getting OAuth Credentials
 
-### GitHub OAuth Setup
+### GitHub
 
 1. Go to **[github.com/settings/developers](https://github.com/settings/developers)**
 2. Click **"New OAuth App"**
-3. Set these values:
-   - **Application name:** anything (e.g. `My App`)
-   - **Homepage URL:** `http://localhost:8000`
-   - **Authorization callback URL:** `http://localhost:8000/auth/github/callback`
-4. Copy **Client ID** and **Client Secret** into your `.env` file
+3. Set callback URL to `http://localhost:8000/auth/github/callback`
+4. Copy **Client ID** and **Client Secret** into `.env`
 
-### Google OAuth Setup
+### Google
 
 1. Go to **[console.cloud.google.com/apis/credentials](https://console.cloud.google.com/apis/credentials)**
-2. Click **"Create Credentials"** > **"OAuth Client ID"**
-3. Application type: **Web application**
-4. Add authorized redirect URI: `http://localhost:8000/auth/google/callback`
-5. Copy **Client ID** and **Client Secret** into your `.env` file
+2. Click **"Create Credentials"** > **"OAuth Client ID"** > Web application
+3. Add redirect URI: `http://localhost:8000/auth/google/callback`
+4. Copy **Client ID** and **Client Secret** into `.env`
+
+### Discord
+
+1. Go to **[discord.com/developers/applications](https://discord.com/developers/applications)**
+2. Create a new application > OAuth2
+3. Add redirect: `http://localhost:8000/auth/discord/callback`
+4. Copy **Client ID** and **Client Secret** into `.env`
+
+### Spotify
+
+1. Go to **[developer.spotify.com/dashboard](https://developer.spotify.com/dashboard)**
+2. Create an app > Edit Settings
+3. Add redirect URI: `http://localhost:8000/auth/spotify/callback`
+4. Copy **Client ID** and **Client Secret** into `.env`
+
+### Microsoft
+
+1. Go to **[portal.azure.com](https://portal.azure.com/#blade/Microsoft_AAD_RegisteredApps)**
+2. Register a new application > Web platform
+3. Add redirect URI: `http://localhost:8000/auth/microsoft/callback`
+4. Copy **Application (client) ID** and create a **Client Secret** in `.env`
+
+### LinkedIn
+
+1. Go to **[linkedin.com/developers/apps](https://www.linkedin.com/developers/apps)**
+2. Create a new app > Auth tab
+3. Add redirect URL: `http://localhost:8000/auth/linkedin/callback`
+4. Copy **Client ID** and **Client Secret** into `.env`
 
 ---
 
@@ -159,15 +257,15 @@ sequenceDiagram
 
 ### Routes
 
-After running `oauth-init`, your app gets these endpoints:
+After running `oauth-init`, your app gets these endpoints for each configured provider:
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/auth/github/login` | GET | Redirects user to GitHub's OAuth consent screen |
-| `/auth/github/callback` | GET | Handles GitHub's redirect, exchanges code for token |
-| `/auth/google/login` | GET | Redirects user to Google's OAuth consent screen |
-| `/auth/google/callback` | GET | Handles Google's redirect, exchanges code for token |
+| `/auth/{provider}/login` | GET | Redirects user to the provider's OAuth consent screen |
+| `/auth/{provider}/callback` | GET | Handles the redirect, exchanges code for token |
 | `/auth/logout` | GET | Clears session cookie, redirects to home |
+
+Where `{provider}` is one of: `github`, `google`, `discord`, `spotify`, `microsoft`, `linkedin`.
 
 ### Session Helper
 
@@ -185,7 +283,7 @@ async def dashboard(request: Request):
     # - name: str      (display name)
     # - email: str     (email address, may be None)
     # - avatar: str    (profile picture URL)
-    # - provider: str  ("github" or "google")
+    # - provider: str  ("github", "google", "discord", etc.)
 
     return {"welcome": user["name"]}
 ```
@@ -195,21 +293,23 @@ async def dashboard(request: Request):
 ## CLI Reference
 
 ```bash
-oauth-init                         # scaffold all providers + example app
-oauth-init --provider github       # only GitHub OAuth
-oauth-init --provider google       # only Google OAuth
-oauth-init --no-example            # skip the example app, just routes + config
-oauth-init --dir ./path/to/project # scaffold into a specific directory
+oauth-init                          # scaffold all providers + example app
+oauth-init --provider github        # only GitHub OAuth
+oauth-init --provider discord       # only Discord OAuth
+oauth-init --no-example             # skip the example app, just routes + config
+oauth-init --dir ./path/to/project  # scaffold into a specific directory
 ```
+
+Available `--provider` values: `github`, `google`, `discord`, `spotify`, `microsoft`, `linkedin`.
 
 **Generated files:**
 
-| File | Purpose | Lines |
-|------|---------|-------|
-| `oauth_config.py` | Loads provider credentials from `.env`, configures OAuth endpoints | ~45 |
-| `oauth_routes.py` | FastAPI router with login, callback, logout, session management | ~150 |
-| `oauth_example_app.py` | Complete working demo with login page and profile page | ~85 |
-| `.env` | Template with all required environment variables | ~12 |
+| File | Purpose |
+|------|---------|
+| `oauth_config.py` | Loads provider credentials from `.env`, configures OAuth endpoints for all 6 providers |
+| `oauth_routes.py` | FastAPI router with login, callback, logout, session management, and PKCE support |
+| `oauth_example_app.py` | Complete working demo with login page and profile page |
+| `.env` | Template with environment variables for all providers |
 
 ---
 
@@ -218,61 +318,13 @@ oauth-init --dir ./path/to/project # scaffold into a specific directory
 The generated code includes these security measures out of the box:
 
 - **CSRF protection** via the `state` parameter (random token verified on callback)
+- **PKCE support** for OAuth 2.1 compliance (S256 code challenge)
 - **HTTP-only cookies** for session IDs (not accessible via JavaScript)
 - **SameSite=Lax** cookie policy (prevents cross-site request forgery)
 - **Server-side token exchange** (client secret never exposed to the browser)
 - **One-hour session expiry** (configurable via `max_age`)
 
 > **Note:** The generated code uses in-memory session storage. For production, swap `_sessions` dict for Redis, PostgreSQL, or your database of choice.
-
----
-
-## Comparison with Other Libraries
-
-| | **oauth-for-dummies** | **Authlib** | **OAuthLib** | **python-social-auth** |
-|---|---|---|---|---|
-| **Use case** | Add OAuth fast | Production auth | Spec compliance | Full social auth |
-| **Setup time** | 30 seconds | 30+ minutes | 1+ hours | 30+ minutes |
-| **Lines to integrate** | 2 | 15+ | 30+ | 20+ |
-| **Working demo included** | Yes | No | No | No |
-| **Beginner-friendly** | Yes | No | No | Moderate |
-| **CLI scaffolding** | Yes | No | No | No |
-| **Dependencies** | FastAPI + httpx | Many | Many | Many |
-
-**This is not a replacement for Authlib.** Use oauth-for-dummies to get started fast, learn how OAuth works, and prototype. Use Authlib when you need production-grade token management, PKCE, or OpenID Connect compliance.
-
----
-
-## Tutorial
-
-This repo includes a complete tutorial app that logs every step of the OAuth flow to your terminal:
-
-```bash
-git clone https://github.com/pranavkumaarofficial/oauth-for-dummies.git
-cd oauth-for-dummies
-pip install -r requirements.txt
-cp .env.example .env
-# add your OAuth credentials to .env
-uvicorn app.main:app --reload
-```
-
-You'll see output like this for every login:
-
-```
-============================================================
-  STEP 1 — Redirect user to GitHub
-============================================================
-  URL: https://github.com/login/oauth/authorize
-  client_id:    abc12345...
-  redirect_uri: http://localhost:8000/auth/github/callback
-  scope:        read:user user:email
-  state:        kF9x2mQp...
-============================================================
-```
-
-See also:
-- **[How OAuth Works](docs/how-oauth-works.md)** — visual explanation of every step
-- **[Step-by-step Tutorial](docs/tutorial.md)** — build OAuth from scratch
 
 ---
 
@@ -283,21 +335,27 @@ oauth-for-dummies/
 |-- oauth_for_dummies/           # pip-installable CLI package
 |   |-- cli.py                   # oauth-init command
 |   +-- scaffold/                # template files dropped into your project
-|       |-- oauth_config.py
-|       |-- oauth_routes.py
-|       +-- oauth_example_app.py
+|       |-- oauth_config.py      # 6 provider configs
+|       |-- oauth_routes.py      # routes + PKCE support
+|       +-- oauth_example_app.py # demo with branded buttons
 |
 |-- app/                         # tutorial app (learning resource)
 |   |-- main.py                  # FastAPI demo with UI
 |   |-- config.py                # environment variable loader
-|   +-- auth/
-|       |-- routes.py            # auth route handlers
-|       +-- storage.py           # session storage
+|   |-- auth/
+|   |   |-- routes.py            # auth route handlers
+|   |   +-- storage.py           # session + debug session storage
+|   +-- learn/
+|       +-- routes.py            # OAuth debugger (Learn Mode) routes
 |
 |-- providers/                   # OAuth provider implementations
-|   |-- base.py                  # abstract OAuthProvider class
-|   |-- github.py                # GitHub OAuth provider
-|   |-- google.py                # Google OAuth provider
+|   |-- base.py                  # abstract OAuthProvider class + PKCE
+|   |-- github.py                # GitHub
+|   |-- google.py                # Google
+|   |-- discord.py               # Discord
+|   |-- spotify.py               # Spotify
+|   |-- microsoft.py             # Microsoft
+|   |-- linkedin.py              # LinkedIn
 |   +-- registry.py              # provider auto-discovery
 |
 |-- tests/                       # unit tests (20 tests, all passing)
@@ -307,13 +365,66 @@ oauth-for-dummies/
 
 ---
 
+## Comparison with Other Libraries
+
+| | **oauth-for-dummies** | **fastapi-oauth2** | **Authlib** | **python-social-auth** |
+|---|---|---|---|---|
+| **What it is** | CLI scaffold + debugger | Middleware library | Production auth library | Social auth framework |
+| **Approach** | Transparent (you own the code) | Black box (middleware) | Black box (library) | Black box (framework) |
+| **Providers** | 6 | Many (via social-core) | Many | Many |
+| **OAuth debugger** | Yes | No | No | No |
+| **PKCE / OAuth 2.1** | Yes | No | Yes | No |
+| **Learn from it** | Yes (every HTTP request visible) | No | No | No |
+| **Setup time** | 30 seconds | 5 minutes | 30+ minutes | 30+ minutes |
+| **CLI scaffolding** | Yes | No | No | No |
+
+**When to use oauth-for-dummies:** You want to understand OAuth, get started fast, and own the code without a runtime dependency.
+
+**When to use something else:** You need 20+ providers, enterprise SSO (SAML), or a battle-tested library you don't want to maintain.
+
+---
+
+## Tutorial
+
+This repo includes a complete tutorial app that logs every step of the OAuth flow to your terminal:
+
+```bash
+git clone https://github.com/pranavkumaarofficial/oauth-for-dummies.git
+cd oauth-for-dummies
+pip install -e .
+cp .env.example .env
+# add your OAuth credentials to .env
+uvicorn app.main:app --reload
+```
+
+You'll see output like this for every login:
+
+```
+============================================================
+  STEP 1 -- Redirect user to GitHub
+============================================================
+  URL: https://github.com/login/oauth/authorize
+  client_id:    abc12345...
+  redirect_uri: http://localhost:8000/auth/github/callback
+  scope:        read:user user:email
+  state:        kF9x2mQp...
+============================================================
+```
+
+See also:
+- **[How OAuth Works](docs/how-oauth-works.md)** -- visual explanation of every step
+- **[Step-by-step Tutorial](docs/tutorial.md)** -- build OAuth from scratch
+
+---
+
 ## Contributing
 
 Contributions welcome. Some ideas:
 
-- **Add a provider** — Discord, Spotify, Twitter/X, LinkedIn, Apple
-- **Improve the CLI** — interactive mode, `--framework flask` support
+- **Add a provider** -- Twitter/X, Apple, Facebook, Twitch
+- **Improve the CLI** -- interactive mode, `--framework flask` support
 - **Write tests** for the scaffold files
+- **Deploy the debugger** -- host a public demo of Learn Mode
 
 See **[CONTRIBUTING.md](CONTRIBUTING.md)** for setup instructions.
 
@@ -331,13 +442,16 @@ A: Not yet. Currently FastAPI only. Flask support is planned.
 A: Python 3.9 and above.
 
 **Q: Do I need to understand OAuth to use this?**
-A: No. Run `oauth-init`, add your keys to `.env`, and it works. But if you want to understand what's happening, read the [tutorial](docs/tutorial.md).
+A: No. Run `oauth-init`, add your keys to `.env`, and it works. But if you want to understand what's happening, use Learn Mode or read the [tutorial](docs/tutorial.md).
+
+**Q: What is PKCE and do I need it?**
+A: PKCE (Proof Key for Code Exchange) is a security improvement that replaces client_secret with a cryptographic challenge. It's required in OAuth 2.1 and recommended for all new apps. This project supports it out of the box.
 
 ---
 
 ## License
 
-MIT — use it, learn from it, build on it.
+MIT -- use it, learn from it, build on it.
 
 ---
 

@@ -30,6 +30,30 @@ PROVIDERS = {
         "setup_url": "https://console.cloud.google.com/apis/credentials",
         "callback_path": "/auth/google/callback",
     },
+    "discord": {
+        "name": "Discord",
+        "env_vars": ["DISCORD_CLIENT_ID", "DISCORD_CLIENT_SECRET"],
+        "setup_url": "https://discord.com/developers/applications",
+        "callback_path": "/auth/discord/callback",
+    },
+    "spotify": {
+        "name": "Spotify",
+        "env_vars": ["SPOTIFY_CLIENT_ID", "SPOTIFY_CLIENT_SECRET"],
+        "setup_url": "https://developer.spotify.com/dashboard",
+        "callback_path": "/auth/spotify/callback",
+    },
+    "microsoft": {
+        "name": "Microsoft",
+        "env_vars": ["MICROSOFT_CLIENT_ID", "MICROSOFT_CLIENT_SECRET"],
+        "setup_url": "https://portal.azure.com/#blade/Microsoft_AAD_RegisteredApps",
+        "callback_path": "/auth/microsoft/callback",
+    },
+    "linkedin": {
+        "name": "LinkedIn",
+        "env_vars": ["LINKEDIN_CLIENT_ID", "LINKEDIN_CLIENT_SECRET"],
+        "setup_url": "https://www.linkedin.com/developers/apps",
+        "callback_path": "/auth/linkedin/callback",
+    },
 }
 
 # Files to always copy

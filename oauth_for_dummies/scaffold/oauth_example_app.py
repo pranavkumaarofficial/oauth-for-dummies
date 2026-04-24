@@ -31,6 +31,14 @@ STYLE = """
   .btn-github:hover {{ background: #32383f; }}
   .btn-google {{ background: #fff; color: #1f2328; border: 1px solid #d1d9e0; }}
   .btn-google:hover {{ background: #f3f4f6; }}
+  .btn-discord {{ background: #5865f2; color: #fff; border-color: #5865f2; }}
+  .btn-discord:hover {{ background: #4752c4; }}
+  .btn-spotify {{ background: #1db954; color: #fff; border-color: #1db954; }}
+  .btn-spotify:hover {{ background: #1aa34a; }}
+  .btn-microsoft {{ background: #fff; color: #1f2328; border: 1px solid #d1d9e0; }}
+  .btn-microsoft:hover {{ background: #f3f4f6; }}
+  .btn-linkedin {{ background: #0a66c2; color: #fff; border-color: #0a66c2; }}
+  .btn-linkedin:hover {{ background: #004182; }}
   .card {{ background: #fff; border: 1px solid #d1d9e0; border-radius: 12px; padding: 1.5rem;
            margin-top: 1.5rem; text-align: center; }}
   img.avatar {{ width: 72px; height: 72px; border-radius: 50%; border: 2px solid #d1d9e0; margin-bottom: 0.75rem; }}

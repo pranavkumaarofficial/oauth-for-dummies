@@ -1,12 +1,29 @@
-# OAuth credentials — fill these in.
-# Get GitHub keys: https://github.com/settings/developers
-# Get Google keys: https://console.cloud.google.com/apis/credentials
+# OAuth credentials — fill in the providers you want to use.
+# Only configured providers will appear in the UI.
 
+# GitHub — https://github.com/settings/developers
 GITHUB_CLIENT_ID=""
 GITHUB_CLIENT_SECRET=""
 
+# Google — https://console.cloud.google.com/apis/credentials
 GOOGLE_CLIENT_ID=""
 GOOGLE_CLIENT_SECRET=""
+
+# Discord — https://discord.com/developers/applications
+DISCORD_CLIENT_ID=""
+DISCORD_CLIENT_SECRET=""
+
+# Spotify — https://developer.spotify.com/dashboard
+SPOTIFY_CLIENT_ID=""
+SPOTIFY_CLIENT_SECRET=""
+
+# Microsoft — https://portal.azure.com/#blade/Microsoft_AAD_RegisteredApps
+MICROSOFT_CLIENT_ID=""
+MICROSOFT_CLIENT_SECRET=""
+
+# LinkedIn — https://www.linkedin.com/developers/apps
+LINKEDIN_CLIENT_ID=""
+LINKEDIN_CLIENT_SECRET=""
 
 OAUTH_BASE_URL="http://localhost:8000"
 APP_SECRET_KEY="change-me-to-something-random"

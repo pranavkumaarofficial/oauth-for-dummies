@@ -1,6 +1,7 @@
 """
 OAuth Routes — handles login, callback, and logout.
 
+Supports OAuth 2.0 (client_secret) and OAuth 2.1 (PKCE).
 Drop this into your FastAPI app:
     from oauth_routes import router as oauth_router
     app.include_router(oauth_router)
@@ -11,6 +12,8 @@ Docs: https://github.com/pranavkumaarofficial/oauth-for-dummies
 
 from __future__ import annotations
 
+import hashlib
+import base64
 import secrets
 from urllib.parse import urlencode
 
@@ -24,7 +27,110 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 
 # In-memory state + session storage (swap for Redis/DB in production)
 _pending_states: dict[str, str] = {}
+_code_verifiers: dict[str, str] = {}  # PKCE: state -> code_verifier
 _sessions: dict[str, dict] = {}
+
+# Providers that support/require PKCE (add provider keys here to enable)
+PKCE_PROVIDERS: set[str] = set()
+
+
+# ---- PKCE helpers ----
+
+def _generate_code_verifier() -> str:
+    return secrets.token_urlsafe(64)
+
+
+def _generate_code_challenge(verifier: str) -> str:
+    digest = hashlib.sha256(verifier.encode("ascii")).digest()
+    return base64.urlsafe_b64encode(digest).rstrip(b"=").decode("ascii")
+
+
+# ---- User info normalizers ----
+
+def _normalize_user(provider: str, raw: dict, access_token: str | None = None) -> dict:
+    """Normalize provider-specific user data into a standard shape."""
+    if provider == "github":
+        user = {
+            "id": str(raw["id"]),
+            "name": raw.get("name") or raw.get("login", ""),
+            "email": raw.get("email"),
+            "avatar": raw.get("avatar_url"),
+            "provider": provider,
+        }
+        # GitHub sometimes hides email — try the emails endpoint
+        if not user["email"] and access_token:
+            try:
+                resp = httpx.get(
+                    "https://api.github.com/user/emails",
+                    headers={"Authorization": f"Bearer {access_token}"},
+                )
+                if resp.status_code == 200:
+                    primary = next((e for e in resp.json() if e.get("primary")), None)
+                    if primary:
+                        user["email"] = primary["email"]
+            except Exception:
+                pass
+        return user
+
+    elif provider == "google":
+        return {
+            "id": str(raw["id"]),
+            "name": raw.get("name", ""),
+            "email": raw.get("email"),
+            "avatar": raw.get("picture"),
+            "provider": provider,
+        }
+
+    elif provider == "discord":
+        avatar_hash = raw.get("avatar")
+        user_id = raw["id"]
+        avatar_url = None
+        if avatar_hash:
+            avatar_url = f"https://cdn.discordapp.com/avatars/{user_id}/{avatar_hash}.png"
+        return {
+            "id": str(user_id),
+            "name": raw.get("global_name") or raw.get("username", ""),
+            "email": raw.get("email"),
+            "avatar": avatar_url,
+            "provider": provider,
+        }
+
+    elif provider == "spotify":
+        images = raw.get("images", [])
+        return {
+            "id": str(raw["id"]),
+            "name": raw.get("display_name") or "",
+            "email": raw.get("email"),
+            "avatar": images[0]["url"] if images else None,
+            "provider": provider,
+        }
+
+    elif provider == "microsoft":
+        return {
+            "id": str(raw["id"]),
+            "name": raw.get("displayName") or "",
+            "email": raw.get("mail") or raw.get("userPrincipalName"),
+            "avatar": None,
+            "provider": provider,
+        }
+
+    elif provider == "linkedin":
+        return {
+            "id": str(raw.get("sub", "")),
+            "name": raw.get("name") or "",
+            "email": raw.get("email"),
+            "avatar": raw.get("picture"),
+            "provider": provider,
+        }
+
+    else:
+        return {
+            "id": str(raw.get("id", "")),
+            "name": raw.get("name", ""),
+            "email": raw.get("email"),
+            "avatar": raw.get("avatar", raw.get("picture")),
+            "provider": provider,
+        }
 
 
 def get_session(request: Request) -> dict | None:
@@ -52,6 +158,14 @@ async def login(provider: str):
         "state": state,
         "response_type": "code",
     }
+
+    # PKCE: add code_challenge if enabled for this provider
+    if provider in PKCE_PROVIDERS:
+        verifier = _generate_code_verifier()
+        _code_verifiers[state] = verifier
+        params["code_challenge"] = _generate_code_challenge(verifier)
+        params["code_challenge_method"] = "S256"
+
     return RedirectResponse(f"{config['authorize_url']}?{urlencode(params)}")
 
 
@@ -69,23 +183,32 @@ async def callback(provider: str, code: str = "", state: str = ""):
     if not config:
         raise HTTPException(status_code=404, detail=f"Unknown provider: {provider}")
 
+    # Build token exchange request
+    token_data = {
+        "client_id": config["client_id"],
+        "code": code,
+        "redirect_uri": f"{OAUTH_BASE_URL}/auth/{provider}/callback",
+        "grant_type": "authorization_code",
+    }
+
+    # PKCE: send code_verifier instead of client_secret
+    code_verifier = _code_verifiers.pop(state, None)
+    if code_verifier:
+        token_data["code_verifier"] = code_verifier
+    else:
+        token_data["client_secret"] = config["client_secret"]
+
     # Exchange code for access token
     async with httpx.AsyncClient() as client:
         token_resp = await client.post(
             config["token_url"],
-            data={
-                "client_id": config["client_id"],
-                "client_secret": config["client_secret"],
-                "code": code,
-                "redirect_uri": f"{OAUTH_BASE_URL}/auth/{provider}/callback",
-                "grant_type": "authorization_code",
-            },
+            data=token_data,
             headers={"Accept": "application/json"},
         )
         token_resp.raise_for_status()
-        token_data = token_resp.json()
+        token_json = token_resp.json()
 
-    access_token = token_data["access_token"]
+    access_token = token_json["access_token"]
 
     # Fetch user info
     async with httpx.AsyncClient() as client:
@@ -96,47 +219,8 @@ async def callback(provider: str, code: str = "", state: str = ""):
         user_resp.raise_for_status()
         raw_user = user_resp.json()
 
-    # Normalize user data across providers
-    if provider == "github":
-        user = {
-            "id": str(raw_user["id"]),
-            "name": raw_user.get("name") or raw_user.get("login", ""),
-            "email": raw_user.get("email"),
-            "avatar": raw_user.get("avatar_url"),
-            "provider": provider,
-        }
-        # GitHub sometimes hides email — try the emails endpoint
-        if not user["email"]:
-            try:
-                async with httpx.AsyncClient() as email_client:
-                    emails_resp = await email_client.get(
-                        "https://api.github.com/user/emails",
-                        headers={"Authorization": f"Bearer {access_token}"},
-                    )
-                if emails_resp.status_code == 200:
-                    primary = next(
-                        (e for e in emails_resp.json() if e.get("primary")), None
-                    )
-                    if primary:
-                        user["email"] = primary["email"]
-            except Exception:
-                pass
-    elif provider == "google":
-        user = {
-            "id": str(raw_user["id"]),
-            "name": raw_user.get("name", ""),
-            "email": raw_user.get("email"),
-            "avatar": raw_user.get("picture"),
-            "provider": provider,
-        }
-    else:
-        user = {
-            "id": str(raw_user.get("id", "")),
-            "name": raw_user.get("name", ""),
-            "email": raw_user.get("email"),
-            "avatar": raw_user.get("avatar", raw_user.get("picture")),
-            "provider": provider,
-        }
+    # Normalize user data
+    user = _normalize_user(provider, raw_user, access_token)
 
     # Create session
     session_id = secrets.token_urlsafe(32)
