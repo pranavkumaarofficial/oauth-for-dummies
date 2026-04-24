@@ -4,12 +4,12 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "oauth-for-dummies"
-version = "1.0.1"
-description = "Add OAuth login to your FastAPI app in one command."
+version = "1.1.0"
+description = "Add OAuth login to your FastAPI app in one command. 6 providers, PKCE support, and a built-in OAuth debugger."
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.9"
-keywords = ["oauth", "fastapi", "authentication", "github", "google", "cli"]
+keywords = ["oauth", "fastapi", "authentication", "github", "google", "discord", "spotify", "microsoft", "linkedin", "pkce", "oauth2", "cli"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",

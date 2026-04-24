@@ -25,7 +25,10 @@
       "Bash(gh api:*)",
       "WebFetch(domain:pepy.tech)",
       "WebFetch(domain:docs.pysnippet.org)",
-      "WebFetch(domain:pypistats.org)"
+      "WebFetch(domain:pypistats.org)",
+      "Bash(gh run list:*)",
+      "Bash(where:*)",
+      "Bash(cmd.exe /c \"where gh\")"
     ]
   }
 }
