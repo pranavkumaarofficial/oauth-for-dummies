@@ -27,7 +27,7 @@ app.include_router(oauth_router)
 Done. You now have `/auth/{provider}/login`, `/auth/{provider}/callback`, and `/auth/logout`.
 
 <p align="center">
-  <img src="demo.gif" alt="OAuth debugger Learn Mode demo" width="720">
+  <img src="demo.gif" alt="OAuth debugger Learn Mode demo" width="480">
 </p>
 
 ---
