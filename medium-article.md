@@ -1,7 +1,6 @@
 # I built an OAuth debugger for FastAPI because every tutorial made it harder than it needed to be
 
-Adding "Login with GitHub" to a FastAPI app should be a 20-minute task. It took me an entire afternoon the first time I tried.
-
+Adding "Login with GitHub" to a FastAPI app should be a 5-minute task. 
 The OAuth 2.0 spec is 76 pages. Every tutorial I found used a different approach. Half of them were outdated. And I spent two hours debugging a redirect URI mismatch that turned out to be a trailing slash.
 
 So I built a tool that does two things: drops working OAuth routes into any FastAPI project with one command, and shows you exactly what happens at every step of the flow.
