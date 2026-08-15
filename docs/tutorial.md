@@ -1,49 +1,52 @@
-# OAuth 2.0 Tutorial: From Zero to "I Get It"
+# OAuth 2.0 tutorial: from zero to actually understanding it
 
-> This tutorial assumes you know basic Python and have used `pip install`.
-> That's it. No prior auth knowledge needed.
+This assumes you know basic Python and have used `pip install`. No prior auth
+knowledge needed.
 
----
-
-## Chapter 1: Why Does OAuth Exist?
-
-Imagine you're building an app that shows someone's GitHub repositories.
-The old way: ask for their GitHub username and password. **Terrible idea.**
-
-- You're storing someone else's password
-- If your app gets hacked, their GitHub is compromised
-- They can't limit what you access
-- They can't revoke your access without changing their password
-
-**OAuth fixes all of this.** The user tells GitHub: *"Let this app see my repos."*
-Your app gets a token: a temporary key that only works for what the user allowed.
+If you would rather see it than read it, run the app and open Learn Mode. It
+walks the same flow with real requests, and the demo provider needs no
+credentials at all.
 
 ---
 
-## Chapter 2: The Four Characters
+## 1. Why OAuth exists
 
-Every OAuth flow has four players:
+Say you are building an app that shows someone's GitHub repositories. The old
+approach was to ask for their GitHub username and password, which is a bad idea
+for four separate reasons:
 
-| Who | What They Do | In Our App |
-|-----|-------------|------------|
-| **Resource Owner** | The user who owns the data | You, the human |
-| **Client** | The app that wants access | Our FastAPI app |
-| **Authorization Server** | Verifies the user and issues tokens | GitHub's OAuth server |
-| **Resource Server** | Holds the protected data | GitHub's API |
+- You are storing someone else's password
+- If your app is breached, their GitHub goes with it
+- They cannot limit what you can reach
+- They cannot revoke you without changing their password and breaking everything
+  else
 
-Sometimes the Authorization Server and Resource Server are the same company
-(like GitHub). The point is they're conceptually separate roles.
+OAuth fixes all four. The user tells GitHub to let your app see their repos, and
+your app receives a token: a temporary key that only works for what was allowed.
 
 ---
 
-## Chapter 3: The Flow (Plain English)
+## 2. The four roles
 
-Here's the entire OAuth 2.0 Authorization Code flow in plain language:
+| Role | What it does | In this app |
+|---|---|---|
+| Resource owner | Owns the data | You, the human |
+| Client | Wants access to it | The FastAPI app |
+| Authorization server | Verifies the user, issues tokens | GitHub's OAuth server |
+| Resource server | Holds the protected data | GitHub's API |
 
-**Step 1, Your app says "go ask GitHub"**
+The authorization server and resource server are often the same company, but
+they are separate roles, and providers really do split them across different
+hostnames.
 
-Your app builds a URL to GitHub's authorization page and redirects the user there.
-The URL includes your app's ID and what permissions you want.
+---
+
+## 3. The flow in plain language
+
+**Your app says "go ask GitHub".**
+
+It builds a URL to GitHub's authorization page and redirects the user there. The
+URL carries your app's public ID and the permissions you want.
 
 ```
 https://github.com/login/oauth/authorize?
@@ -53,24 +56,25 @@ https://github.com/login/oauth/authorize?
   state=random-csrf-token
 ```
 
-**Step 2, The user says "yes, I trust this app"**
+**The user approves.**
 
-GitHub shows a consent screen: *"OAuth for Dummies wants to access your profile."*
-The user clicks "Authorize."
+GitHub shows a consent screen naming your app and the permissions. The user
+clicks Authorize.
 
-**Step 3, GitHub sends a code to your app**
+**GitHub sends a code back.**
 
-GitHub redirects the user back to your app with a short-lived authorization code:
+It redirects the user to your app with a short-lived authorization code:
 
 ```
 http://localhost:8000/auth/github/callback?code=xyz789&state=random-csrf-token
 ```
 
-This code is NOT the access token. It's a one-time-use ticket that expires in minutes.
+This code is not the access token. It is a single-use ticket that expires in
+minutes.
 
-**Step 4, Your app trades the code for a token**
+**Your app trades the code for a token.**
 
-Your app makes a server-to-server POST request (the user doesn't see this):
+This request goes server to server. The user never sees it:
 
 ```
 POST https://github.com/login/oauth/access_token
@@ -79,79 +83,100 @@ POST https://github.com/login/oauth/access_token
   code=xyz789
 ```
 
-GitHub responds with an access token.
-
-**Step 5, Your app uses the token**
-
-Now your app can call GitHub's API:
+**Your app uses the token.**
 
 ```
 GET https://api.github.com/user
 Authorization: Bearer ghp_abc123token
 ```
 
-And GitHub responds with the user's profile data. Done.
+GitHub returns the profile. Done.
 
 ---
 
-## Chapter 4: Why Not Just Send the Token Directly?
+## 4. Why the extra step with the code
 
-Good question. Why the extra step with the "code"?
+It is a fair question. Why not have GitHub hand over the token directly?
 
-Because the authorization code travels through the user's browser (in the URL).
-If someone intercepts it, they still can't use it without your `client_secret`,
-which never leaves your server.
+Because the authorization code travels through the user's browser, sitting in a
+URL where it can be logged, shoulder-surfed, or left in browser history. Anyone
+who grabs it still cannot use it, because redeeming it requires your
+`client_secret`, which never leaves your server.
 
-The access token, on the other hand, only travels server-to-server, it never
-touches the browser. This is called the **Authorization Code Grant** and it's
-the most secure standard OAuth flow.
+The access token only ever travels server to server. That split is the whole
+design. This is the Authorization Code grant, and it is the right choice for
+server-side web apps.
 
 ---
 
-## Chapter 5: The State Parameter (CSRF Protection)
+## 5. The state parameter, and the mistake almost everyone makes
 
-Notice the `state` parameter in Step 1? Here's why it matters.
+The `state` parameter prevents login CSRF: an attacker making your browser
+finish *their* login, so you end up signed into *their* account on a site you
+trust. Everything you then write or upload lands in their account.
 
-Without it, an attacker could:
-1. Start an OAuth flow with YOUR app
-2. Get the authorization code
-3. Trick another user's browser into sending that code to your callback
+Most tutorials, including an earlier version of this one, describe the check
+like this:
 
-With the `state` parameter, your app generates a random token, stores it,
-and checks that it matches when the callback comes in. If it doesn't match,
-someone is trying something sketchy.
-
-**In our code** (`app/auth/routes.py`):
 ```python
-# On login: generate and save state
-auth_url, state = provider.get_authorization_url()
-store.save_state(state, provider_name)
-
-# On callback: verify state
-saved_provider = store.verify_state(state)
-if saved_provider is None:
-    # CSRF attack! Reject this request.
-    raise HTTPException(400, "Invalid state parameter")
+# Generate a state, store it, compare it on the way back.
+saved = store.verify_state(state)
+if saved is None:
+    raise HTTPException(400, "Invalid state")
 ```
 
+That is not enough, and the gap is worth understanding because it is subtle.
+
+The server-side set only proves the value was issued to *somebody*. It does not
+prove it was issued to *the browser making this request*. So an attacker can
+start a login themselves, capture a perfectly valid code and state, send you the
+callback URL, and your app will accept it. The state is in the set, so the check
+passes.
+
+The fix is to bind the state to the browser that started the flow:
+
+```python
+# At /login: remember the state, and put it in a cookie too.
+response.set_cookie("oauth_state", state, httponly=True,
+                    max_age=600, samesite="lax")
+
+# At /callback: the cookie must match before anything else happens.
+cookie_state = request.cookies.get("oauth_state")
+if not state or not cookie_state or not secrets.compare_digest(cookie_state, state):
+    raise HTTPException(400, "State did not match this browser's login attempt")
+
+# Then confirm it is a state we actually issued.
+pending = _pending_states.pop(state, None)
+if pending is None:
+    raise HTTPException(400, "Invalid state")
+```
+
+Both checks are needed. The cookie proves same browser. The server-side lookup
+proves the value was not invented. This is what
+`oauth_for_dummies/scaffold/oauth_routes.py` does, and there is a test asserting
+that a state issued to one browser cannot be redeemed by another.
+
+This is not a hypothetical: fastapi-sso shipped the same class of bug and fixed
+it in version 0.19.0.
+
 ---
 
-## Chapter 6: Understanding Scopes
+## 6. Scopes
 
-Scopes are how you ask for specific permissions. Instead of getting full access
-to someone's account, you only request what you need.
+Scopes are how you ask for specific permissions instead of blanket access.
 
-| Scope | What It Gives You |
-|-------|-------------------|
-| `read:user` | Basic profile info (name, avatar) |
+| Scope | What it grants |
+|---|---|
+| `read:user` | Basic profile: name, avatar |
 | `user:email` | Email address |
-| `repo` | Full access to repositories |
-| `read:org` | Read organization membership |
+| `repo` | Full repository access |
+| `read:org` | Organization membership |
 
-**Golden rule:** request the minimum scopes you need. Users trust apps that
-ask for less.
+Ask for the minimum you need. Users abandon consent screens that ask for too
+much, and a smaller scope limits the damage if your token leaks.
 
-In our code, each provider defines its default scopes:
+Each provider declares its defaults:
+
 ```python
 class GitHubProvider(OAuthProvider):
     default_scopes = ["read:user", "user:email"]
@@ -159,18 +184,32 @@ class GitHubProvider(OAuthProvider):
 
 ---
 
-## Chapter 7: What About Refresh Tokens?
+## 7. PKCE
 
-Access tokens expire. When they do, your app has two options:
+PKCE, Proof Key for Code Exchange, adds a second proof that the app finishing the
+flow is the one that started it.
 
-1. **Make the user login again**, simple but annoying
-2. **Use a refresh token**, seamless but more complex
+Your app generates a random `code_verifier`, sends its SHA-256 hash as
+`code_challenge` when starting the flow, and sends the original verifier when
+exchanging the code. The provider checks that hashing the verifier reproduces the
+challenge.
 
-A refresh token is a long-lived token that can request new access tokens
-without user interaction. Not all providers give you one (GitHub doesn't
-by default, but Google does).
+The part that trips people up: for a server-side web app, PKCE is sent **in
+addition to** your client secret, not instead of it. Web apps are confidential
+clients and providers still expect the secret. Only public clients, meaning
+mobile apps and single-page apps that have nowhere safe to keep a secret, omit
+it. Send PKCE alone from a web app and the token request fails.
 
-The flow looks like:
+PKCE is required in OAuth 2.1. The demo provider in this repo verifies it, so you
+can watch it work and watch it fail.
+
+---
+
+## 8. Refresh tokens
+
+Access tokens expire. When one does, you either make the user sign in again or
+use a refresh token to get a new one quietly.
+
 ```
 POST /oauth/token
   grant_type=refresh_token
@@ -179,31 +218,34 @@ POST /oauth/token
   client_secret=super_secret
 ```
 
-We don't implement refresh tokens in the basic demo to keep things simple,
-but check the `providers/base.py`, the `OAuthToken` dataclass already
-has a `refresh_token` field ready for when you want to add it.
+Not every provider issues them. Google does. GitHub does not, by default.
+
+This project does not implement refresh, to keep the flow readable, but
+`OAuthToken` in `providers/base.py` already carries a `refresh_token` field for
+when you add it.
 
 ---
 
-## Chapter 8: Running the Demo
-
-Now that you understand the theory, go see it in action:
+## 9. Running it
 
 ```bash
-# 1. Set up GitHub OAuth keys (see README.md)
-# 2. Start the app
+git clone https://github.com/pranavkumaarofficial/oauth-for-dummies.git
+cd oauth-for-dummies
+pip install -e .
 uvicorn app.main:app --reload
-
-# 3. Open http://localhost:8000
-# 4. Click "Login with GitHub"
-# 5. Watch your terminal, every step is logged
 ```
 
-Your terminal will show something like:
+Open http://localhost:8000 and pick the Demo Provider. It needs no credentials
+because the authorization server runs inside the app.
+
+For a real provider, the Settings page has per-provider instructions and the
+exact callback URL to register.
+
+Every step also prints to your terminal:
 
 ```
 ============================================================
-  🔗 STEP 1, Redirect user to GitHub
+  STEP 1, Redirect user to GitHub
 ============================================================
   URL: https://github.com/login/oauth/authorize
   client_id:    abc12345...
@@ -213,43 +255,37 @@ Your terminal will show something like:
 ============================================================
 ```
 
-Follow along as each step happens in real time.
+---
+
+## 10. Errors you will hit
+
+**redirect_uri mismatch.** The callback URL your app sends has to match what you
+registered, exactly. A trailing slash counts. So does `localhost` versus
+`127.0.0.1`. The Settings page prints the exact string this app sends.
+
+**invalid_client.** Check `.env` for stray spaces or quotes around the values. On
+Microsoft specifically, make sure you copied the secret Value and not the Secret
+ID, which sits right next to it and looks just as plausible.
+
+**bad_verification_code.** Authorization codes are single-use and short-lived. If
+you refreshed the callback page, the code is already spent. Start again.
+
+**Scope not authorized.** Your OAuth app is not approved for the scope you asked
+for. On LinkedIn this usually means the Sign In with LinkedIn product has not
+been added on the Products tab.
+
+**access_denied on Google.** While your consent screen is in Testing mode, only
+accounts on the Test users list can sign in. Add your own address there.
 
 ---
 
-## Chapter 9: Common Mistakes
+## 11. Where to go next
 
-**"Redirect URI mismatch"**
-The callback URL in your code must EXACTLY match what you registered
-with the provider. Even a trailing slash difference will fail.
+Add a second provider, Google or Discord, and notice how little changes. The
+pattern is the same everywhere, which is the real lesson.
 
-**"Invalid client_id"**
-Double-check your `.env` file. Make sure there are no extra spaces
-or quotes around the values.
-
-**"Bad verification code"**
-Authorization codes are one-time-use and expire quickly. If you
-refresh the callback page, the code is already spent. Start the
-flow over.
-
-**"Scope not authorized"**
-You're requesting a scope that your OAuth app isn't approved for.
-Check your app settings on the provider's developer portal.
-
----
-
-## Chapter 10: What Next?
-
-Now that you understand OAuth 2.0, here are your next steps:
-
-1. **Add another provider**, try Google or Discord to see how the
-   pattern stays the same across providers
-2. **Read about PKCE**, an extra security layer for mobile/SPA apps
-3. **Look at Authlib**, now that you understand the concepts, a
-   production library will make much more sense
-4. **Build something real**, add OAuth login to your own project
-
----
-
-*If this tutorial helped you, give the repo a ⭐ on GitHub.
-It helps other confused developers find it.*
+Then read [Authlib](https://authlib.org/) or
+[fastapi-sso](https://github.com/tomasvotava/fastapi-sso). Now that you know what
+the steps are, a production library reads as a set of decisions rather than
+magic, and you will be able to tell when it is doing something you did not
+expect.

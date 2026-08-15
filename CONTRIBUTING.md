@@ -1,101 +1,97 @@
-# Contributing to OAuth for Dummies
+# Contributing
 
-Thank you for considering a contribution. This project helps developers add OAuth to FastAPI apps quickly, and every improvement makes it better for the next person.
+Thanks for considering it. This project exists to make OAuth understandable, so
+the most valuable contributions are usually the ones that make something clearer,
+not just the ones that add features.
 
-## Ways to contribute
-
-### Add a new OAuth provider
-
-This is the most impactful contribution you can make. The project currently supports GitHub, Google, Discord, Spotify, Microsoft, and LinkedIn. Providers we'd like to add:
-
-- Twitter/X
-- Apple
-- Facebook
-- Twitch
-
-How to do it:
-
-1. Create a new file in `providers/` (copy `github.py` as a starting point)
-2. Subclass `OAuthProvider` and fill in the 5 required fields
-3. Implement `normalize_userinfo()` to map the provider's response
-4. Add the provider config to `providers/registry.py`
-5. Update `.env.example` with the new keys
-6. Test it and submit a PR
-
-### Improve the CLI
-
-- Add `--framework flask` support (currently FastAPI only)
-- Interactive mode for the scaffold
-- Better error messages for missing credentials
-
-### Add tests
-
-- Unit tests for individual providers
-- Integration tests for the auth flow
-- Tests for the scaffold files
-
-### Improve documentation
-
-- Fix typos or unclear explanations
-- Add diagrams or illustrations
-- Write a blog post about the project
-
-### Report bugs
-
-Open an issue with:
-- What you expected to happen
-- What actually happened
-- Steps to reproduce
-- Your Python version and OS
-
-## Development setup
+## Getting set up
 
 ```bash
-# Fork the repo on GitHub, then:
 git clone https://github.com/YOUR-USERNAME/oauth-for-dummies.git
 cd oauth-for-dummies
 
-# Create a virtual environment
 python -m venv venv
-source venv/bin/activate  # or venv\Scripts\activate on Windows
+source venv/bin/activate      # venv\Scripts\activate on Windows
 
-# Install dependencies
-pip install -r requirements.txt
-
-# Copy environment variables
-cp .env.example .env
-# Edit .env with your OAuth keys
-
-# Run the app
+pip install -e .
 uvicorn app.main:app --reload
-
-# Run tests
-pytest
 ```
+
+Open http://localhost:8000 and use the Demo Provider. You do not need any
+credentials to work on most of this: the demo provider is a real OAuth server
+running inside the app.
+
+Copy `.env.example` to `.env` only when you want to test against a real provider.
+
+Running the tests:
+
+```bash
+pytest -q
+```
+
+## Good things to pick up
+
+**Add a provider.** Currently GitHub, Google, Discord, Spotify, Microsoft and
+LinkedIn. Twitch, Apple, GitLab and Facebook would all be welcome.
+
+1. Copy `providers/github.py` as a starting point
+2. Subclass `OAuthProvider`, fill in the URLs and scopes
+3. Implement `normalize_userinfo()` to map their response to ours
+4. Fill in `setup_url`, `setup_steps` and `gotcha`. The Settings page renders
+   these, so the provider carries its own instructions
+5. Register it in `providers/registry.py` and add the keys to `.env.example`
+
+The `gotcha` field is worth real effort. It should be the specific thing that
+wastes an hour, not general advice. Look at the existing ones for the tone.
+
+**Host the demo.** The single most useful thing anyone could do right now. The
+demo provider works with no credentials, so the app can be deployed as a live
+demo that people try without cloning.
+
+**Flask support in the scaffolder.** The CLI writes FastAPI code today.
+
+**Token refresh.** `OAuthToken` already has the field. Nothing uses it yet.
+
+**Documentation.** If something confused you, that is a bug worth reporting even
+if the code is correct.
+
+## Reporting a bug
+
+Include what you expected, what happened, how to reproduce it, and your Python
+version and OS.
+
+Security issues are the exception: please open a private security advisory on
+GitHub rather than a public issue.
 
 ## Code style
 
-Keep it readable. That means:
+The whole project is meant to be read by someone learning OAuth, so readability
+beats cleverness every time.
 
-- Clear variable names over clever abbreviations
-- Comments that explain why, not just what
-- Simple patterns over advanced abstractions
-- Short files -- if a file is over 150 lines, consider splitting it
+- Clear names over short ones
+- Comments that explain why, not what
+- Plain patterns over abstractions
+- No em dashes in code, comments or docs. Commas, colons and full stops instead
+- No emoji
 
-We use standard Python formatting. If you have `black` installed:
+If a comment is explaining a security decision, say what breaks without it.
+Those comments are doing the teaching.
 
-```bash
-black .
-```
+We use standard formatting. `black .` if you have it.
 
-## Submitting a pull request
+## Tests
 
-1. Fork the repository
-2. Create a branch: `git checkout -b add-twitter-provider`
-3. Make your changes and commit with a clear message
-4. Push to your fork: `git push origin add-twitter-provider`
-5. Open a PR with a description of what you changed and why
+New behaviour needs a test. Security fixes especially: write the test so that it
+fails against the old code, then confirm that it does. A regression test that
+passes either way is worse than none, because it looks like protection.
 
-## Questions?
+`tests/test_scaffold_routes.py` covers the code that ships to users through
+`oauth-init`. That is the part most worth protecting.
 
-Open an issue with the "question" label.
+## Pull requests
+
+1. Branch: `git checkout -b add-twitch-provider`
+2. Commit with a message explaining why, not just what
+3. Push and open a PR describing the change and how you verified it
+
+Questions are welcome as issues.
