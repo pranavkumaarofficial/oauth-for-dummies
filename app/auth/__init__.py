@@ -1,1 +1,1 @@
-"""Auth module — login, callback, logout routes."""
+"""Auth module: login, callback, logout routes."""

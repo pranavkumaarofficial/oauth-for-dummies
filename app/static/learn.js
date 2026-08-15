@@ -1,7 +1,7 @@
 /* ============================================================
    Learn Mode stepper.
 
-   Drives three things from one piece of state — the current step:
+   Drives three things from one piece of state, the current step:
      1. which panel is shown
      2. which tab is marked active/past
      3. which hop and actors light up in the flow diagram
@@ -71,7 +71,7 @@
     if (nextBtn) nextBtn.disabled = current === total;
     if (counter) counter.textContent = current + " / " + total;
 
-    // Keep the URL shareable — someone can link straight to step 3.
+    // Keep the URL shareable, someone can link straight to step 3.
     if (window.history && window.history.replaceState) {
       window.history.replaceState(null, "", "#step-" + current);
     }
@@ -90,7 +90,7 @@
     });
   });
 
-  // Anything else that jumps to a step — the Replay button, for instance.
+  // Anything else that jumps to a step, the Replay button, for instance.
   document.querySelectorAll("[data-step-goto]").forEach(function (el) {
     el.addEventListener("click", function () {
       go(Number(el.dataset.stepGoto));

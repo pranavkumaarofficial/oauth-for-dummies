@@ -6,68 +6,82 @@
     <title>{{ app_name }}</title>
     <link rel="stylesheet" href="/static/style.css">
     <link rel="stylesheet" href="/static/learn.css">
+    <script src="/static/theme.js"></script>
 </head>
 <body>
-    <div class="container">
-        <header class="hero">
-            <h1>OAuth, step by step</h1>
-            <p class="tagline">Run a real OAuth flow and watch every request as it happens.</p>
-        </header>
+    {% include "_topbar.html" %}
 
-        {% if user %}
-        <div class="card">
-            <div class="profile-result" style="align-items:center;">
-                {% if user.avatar %}
-                <img src="{{ user.avatar }}" alt="" class="avatar" style="width:44px;height:44px;">
-                {% endif %}
-                <div style="flex:1;">
-                    <h2 style="font-size:1rem;">{{ user.name }}</h2>
-                    <p style="font-size:0.8125rem;color:var(--ink-subtle);">Signed in via {{ user.provider | capitalize }}</p>
+    <div class="container band">
+        <div style="display:grid; grid-template-columns: 7fr 5fr; gap: var(--s-xxl); align-items:center;" class="hero-split">
+            <div class="stack">
+                <h1>See what actually happens<br>during an OAuth login.</h1>
+                <p class="body-md muted" style="max-width: 46ch;">
+                    Run a real sign-in and step through every request your app makes: the
+                    redirect, the code, the token exchange, the profile call. Real data, from
+                    your own app.
+                </p>
+                <div class="actions">
+                    <a href="/auth/demo/login?mode=learn" class="btn btn-primary">Start the demo flow</a>
+                    <a href="https://github.com/pranavkumaarofficial/oauth-for-dummies" class="btn btn-secondary">View on GitHub</a>
                 </div>
+                <p class="caption muted-soft">No signup. No credentials. Nothing to configure.</p>
             </div>
-            <div class="actions">
-                <a href="/profile" class="btn btn-primary btn-sm">Profile</a>
-                <a href="/auth/logout" class="btn btn-outline btn-sm">Sign out</a>
+
+            <div class="card-mockup flow-card">
+                {% include "_flow_diagram.html" %}
+            </div>
+        </div>
+    </div>
+
+    <div class="container band-tight">
+        {% if user %}
+        <div class="provider" style="margin-bottom: var(--s-lg);">
+            {% if user.avatar %}<img src="{{ user.avatar }}" alt="" class="avatar avatar-sm">{% endif %}
+            <div>
+                <div class="provider-name">{{ user.name }}</div>
+                <div class="provider-note">Signed in via {{ user.provider }}</div>
+            </div>
+            <div class="provider-cta">
+                <a href="/profile" class="btn btn-secondary btn-sm">Profile</a>
+                <a href="/auth/logout" class="btn btn-ghost btn-sm">Sign out</a>
             </div>
         </div>
         {% endif %}
 
-        {% include "_flow_diagram.html" %}
-
         {% set demo = providers | selectattr("name", "equalto", "demo") | first %}
         {% if demo %}
-        <div class="provider-row featured">
-            <span class="provider-icon">{{ demo.icon | safe }}</span>
+        <p class="eyebrow" style="margin-bottom: var(--s-sm);">Start here</p>
+        <div class="provider provider-featured">
+            <span class="provider-mark">{{ demo.icon | safe }}</span>
             <div>
                 <div class="provider-name">{{ demo.display_name }}</div>
-                <div class="provider-meta">No signup, no credentials &mdash; runs inside this app</div>
+                <div class="provider-note">A real OAuth server running inside this app</div>
             </div>
-            <div class="provider-actions">
-                <span class="badge badge-accent">PKCE</span>
-                <a href="/auth/demo/login?mode=learn" class="btn btn-primary btn-sm">Start Learn Mode</a>
+            <div class="provider-cta">
+                <span class="badge">PKCE</span>
+                <a href="/auth/demo/login?mode=learn" class="btn btn-primary btn-sm">Learn Mode</a>
             </div>
         </div>
-        <p class="tertiary" style="font-size:0.75rem;margin:0.5rem 0 1.75rem;">
-            Start here. It is a genuine OAuth flow &mdash; real redirects, real single-use code,
-            real token exchange &mdash; against a provider served from
+        <p class="caption muted-soft" style="margin: var(--s-xs) 0 var(--s-xl);">
+            Genuine redirects, a real single-use code, a real token exchange. Served from
             <code>app/demo_provider/routes.py</code>.
         </p>
         {% endif %}
 
-        <p class="section-label">Or use a real provider</p>
+        <p class="eyebrow" style="margin-bottom: var(--s-sm);">Or connect a real provider</p>
         {% for p in providers if p.name != "demo" %}
-        <div class="provider-row {% if not p.configured %}unconfigured{% endif %}">
-            <span class="provider-icon">{{ p.icon | safe }}</span>
+        <div class="provider {% if not p.configured %}provider-off{% endif %}">
+            <span class="provider-mark">{{ p.icon | safe }}</span>
             <div>
                 <div class="provider-name">{{ p.display_name }}</div>
-                <div class="provider-meta">
+                <div class="provider-note">
                     {% if p.configured %}Configured{% else %}Add {{ p.name | upper }}_CLIENT_ID to .env{% endif %}
                 </div>
             </div>
-            <div class="provider-actions">
+            <div class="provider-cta">
                 {% if p.configured %}
-                <a href="/auth/{{ p.name }}/login?mode=learn" class="btn btn-outline btn-sm">Learn Mode</a>
-                <a href="/auth/{{ p.name }}/login" class="btn btn-outline btn-sm">Quick login</a>
+                <a href="/auth/{{ p.name }}/login?mode=learn" class="btn btn-secondary btn-sm">Learn Mode</a>
+                <a href="/auth/{{ p.name }}/login" class="btn btn-ghost btn-sm">Quick login</a>
                 {% else %}
                 <span class="badge">not configured</span>
                 {% endif %}
@@ -75,21 +89,19 @@
         </div>
         {% endfor %}
 
-        <div class="card hint-card" style="margin-top:1.75rem;">
-            <p><strong style="color:var(--ink-muted);">Learn Mode</strong> captures every request and
-            response in the flow and walks you through them one hop at a time. <strong style="color:var(--ink-muted);">Quick
-            login</strong> runs the same flow silently and logs each step to your terminal.</p>
+        <div class="callout" style="margin-top: var(--s-lg);">
+            <strong>Learn Mode</strong> captures every request and walks you through them one hop
+            at a time. <strong>Quick login</strong> runs the same flow quietly and logs each step
+            to your terminal.
         </div>
-
-        <footer>
-            <p>
-                <a href="https://github.com/pranavkumaarofficial/oauth-for-dummies">Star on GitHub</a>
-                &nbsp;&middot;&nbsp;
-                <a href="https://github.com/pranavkumaarofficial/oauth-for-dummies/blob/main/docs/tutorial.md">Tutorial</a>
-                &nbsp;&middot;&nbsp;
-                MIT License
-            </p>
-        </footer>
     </div>
+
+    {% include "_footer.html" %}
+
+    <style>
+      @media (max-width: 900px) {
+        .hero-split { grid-template-columns: 1fr !important; gap: var(--s-lg) !important; }
+      }
+    </style>
 </body>
 </html>

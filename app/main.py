@@ -1,5 +1,5 @@
 """
-OAuth for Dummies — Main Application
+OAuth for Dummies: Main Application
 
 This is the entry point. Run it with:
     uvicorn app.main:app --reload
@@ -43,7 +43,7 @@ app.include_router(demo_provider_router)
 
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request):
-    """Landing page — shows available login buttons."""
+    """Landing page: shows available login buttons."""
     providers = list_providers()
     session_id = request.cookies.get("session_id")
     user = None
@@ -70,7 +70,7 @@ async def home(request: Request):
 
 @app.get("/profile", response_class=HTMLResponse)
 async def profile(request: Request):
-    """Profile page — shows user data after login."""
+    """Profile page: shows user data after login."""
     session_id = request.cookies.get("session_id")
     if not session_id:
         return templates.TemplateResponse(

@@ -1,5 +1,5 @@
 """
-Configuration — loads settings from .env file.
+Configuration: loads settings from .env file.
 Everything your app needs to know lives here.
 """
 

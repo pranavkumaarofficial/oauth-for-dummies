@@ -1,4 +1,4 @@
-# 🖼️ How OAuth 2.0 Works — Visual Guide
+# 🖼️ How OAuth 2.0 Works, Visual Guide
 
 > A picture is worth a thousand RFCs.
 

@@ -3,68 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Authorize — Demo Provider</title>
+    <title>Authorize</title>
     <link rel="stylesheet" href="/static/style.css">
+    <script src="/static/theme.js"></script>
 </head>
 <body>
-    <div class="container container-narrow">
+    {% include "_topbar.html" %}
 
-        <div class="card" style="margin-top:3rem;">
-            <p class="eyebrow" style="margin-bottom:1rem;">Demo Provider</p>
+    <div class="container container-narrow band">
+        <div class="card-mockup" style="padding: var(--s-xl);">
+            <p class="eyebrow" style="margin-bottom: var(--s-md);">Demo Provider</p>
 
-            <h2 style="margin-bottom:0.5rem;">Authorize this application?</h2>
-            <p style="color:var(--ink-subtle);font-size:0.875rem;">
-                <strong style="color:var(--ink);">{{ client_id }}</strong> wants to access your
-                Demo Provider account.
+            <h2 style="margin-bottom: var(--s-xs);">Authorize this application?</h2>
+            <p class="body-md muted" style="margin-bottom: var(--s-lg);">
+                <strong style="color:var(--ink);">{{ client_id }}</strong> wants to access your account.
             </p>
 
-            <p class="section-label">It is asking for</p>
-            <table class="param-table">
+            <span class="label">It is asking for</span>
+            <table class="kv">
                 {% for s in scopes %}
                 <tr>
-                    <td class="param-key">{{ s }}</td>
-                    <td class="param-value" style="color:var(--ink-subtle);">
+                    <td class="k">{{ s }}</td>
+                    <td class="v" style="color:var(--muted);">
                         {% if s == "profile" %}Your name and avatar{% elif s == "email" %}Your email address{% else %}{{ s }}{% endif %}
                     </td>
                 </tr>
                 {% endfor %}
             </table>
 
-            <p class="section-label">You would be signed in as</p>
-            <div class="profile-result" style="align-items:center;">
-                <img src="{{ user.avatar }}" alt="" class="avatar" style="width:40px;height:40px;">
+            <span class="label">You would be signed in as</span>
+            <div class="row">
+                <img src="{{ user.avatar }}" alt="" class="avatar avatar-sm">
                 <div>
-                    <div style="font-weight:500;font-size:0.9375rem;">{{ user.display_name }}</div>
-                    <div class="param-value" style="color:var(--ink-subtle);">{{ user.email_address }}</div>
+                    <div class="title-sm">{{ user.display_name }}</div>
+                    <div class="body-sm muted">{{ user.email_address }}</div>
                 </div>
             </div>
 
-            <div class="actions">
+            <div class="actions" style="margin-top: var(--s-lg);">
                 <a class="btn btn-primary" style="flex:1;"
                    href="/demo-provider/approve?redirect_uri={{ redirect_uri | urlencode }}&state={{ state | urlencode }}&scope={{ scope | urlencode }}&code_challenge={{ code_challenge | urlencode }}&code_challenge_method={{ code_challenge_method | urlencode }}">
                     Authorize
                 </a>
-                <a class="btn btn-outline"
+                <a class="btn btn-secondary"
                    href="/demo-provider/deny?redirect_uri={{ redirect_uri | urlencode }}&state={{ state | urlencode }}">
                     Cancel
                 </a>
             </div>
         </div>
 
-        <div class="card hint-card">
-            <p style="margin-bottom:0.5rem;"><strong style="color:var(--ink-muted);">This screen is part of the project.</strong></p>
-            <p>A real provider would make you sign in first. Everything else here is genuine:
-            clicking Authorize issues a real single-use authorization code and redirects your
-            app back to its <code>redirect_uri</code>.</p>
+        <div class="callout" style="margin-top: var(--s-md);">
+            <strong>This screen is part of the project.</strong>
+            A real provider would make you sign in first. Everything else here is genuine: clicking
+            Authorize issues a real single-use authorization code and sends your app back to its
+            <code>redirect_uri</code>.
             {% if code_challenge %}
-            <p style="margin-top:0.5rem;">This request used PKCE. The provider has stored your
-            <code>code_challenge</code> and will require the matching verifier before it issues a token.</p>
+            This request used PKCE, so the provider has stored your <code>code_challenge</code> and
+            will require the matching verifier before it issues a token.
             {% endif %}
         </div>
-
-        <footer>
-            <p>Served by <code>app/demo_provider/routes.py</code> — the provider side of OAuth, readable.</p>
-        </footer>
     </div>
+
+    {% include "_footer.html" %}
 </body>
 </html>

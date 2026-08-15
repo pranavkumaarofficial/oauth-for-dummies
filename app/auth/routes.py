@@ -1,5 +1,5 @@
 """
-Auth Routes — handles the OAuth login flow.
+Auth Routes: handles the OAuth login flow.
 
 Two routes per provider:
   1. GET /auth/{provider}/login    -> redirects user to the provider
@@ -139,7 +139,7 @@ async def callback(provider_name: str, request: Request, code: str = "", state: 
     code_verifier = store.get_code_verifier(state)
 
     print(f"\n{'='*60}")
-    print(f"  STEP 2 — Callback received from {provider_name}")
+    print(f"  STEP 2, Callback received from {provider_name}")
     print(f"{'='*60}")
     print(f"  code:  {code[:16]}...")
     print(f"  state: {state[:16]}... verified")
@@ -163,7 +163,7 @@ async def callback(provider_name: str, request: Request, code: str = "", state: 
 
 
 async def _handle_quick_callback(provider, provider_name: str, code: str, code_verifier: str | None = None):
-    """Standard fast login — redirect straight to /profile."""
+    """Standard fast login: redirect straight to /profile."""
     try:
         token = await provider.exchange_code_for_token(code, code_verifier=code_verifier)
     except Exception as e:
@@ -203,7 +203,7 @@ async def _handle_quick_callback(provider, provider_name: str, code: str, code_v
 
 
 async def _handle_learn_callback(provider, provider_name: str, code: str, state: str, code_verifier: str | None = None):
-    """Learn mode — capture all data and redirect to /learn/{provider}/result."""
+    """Learn mode: capture all data and redirect to /learn/{provider}/result."""
     try:
         token_details = await provider.exchange_code_for_token_detailed(code, code_verifier=code_verifier)
     except Exception as e:

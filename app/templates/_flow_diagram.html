@@ -1,82 +1,72 @@
 {# ---------------------------------------------------------------
    The OAuth flow, drawn.
 
-   Three actors, five hops. Solid lines are front-channel: they travel
-   through the user's browser as redirects, so they are visible in the
-   address bar and in devtools. Dashed lines are back-channel: server to
-   server, never touching the browser. That is the whole reason the
-   client secret can be sent safely in step 3.
+   Three actors, five hops. Solid lines are front-channel: they ride
+   through the user's browser as redirects and show up in the address bar.
+   Dashed lines are back-channel, server to server, never touching the
+   browser. That difference is why the client secret is safe in step 3.
 
-   `data-hop` on each group matches the step index the stepper drives.
+   `data-hop` matches the step index the rail drives.
    --------------------------------------------------------------- #}
-<div class="flow">
-  <div class="flow-stage">
-    <svg class="flow-svg" viewBox="0 0 480 200" role="img"
-         aria-label="OAuth flow between the browser, your app, and the provider">
+<svg class="flow-svg" viewBox="0 0 340 208" role="img"
+     aria-label="OAuth flow between the browser, your app, and the provider">
 
-      {# ---- Actors ---- #}
-      <g class="actor" data-actor="browser">
-        <rect class="actor-node" x="18" y="18" width="74" height="22" rx="6"/>
-        <text class="actor-label" x="55" y="33" text-anchor="middle">Browser</text>
-        <line class="actor-lifeline" x1="55" y1="44" x2="55" y2="188"/>
-      </g>
+  {# ---- Actors ---- #}
+  <g class="actor" data-actor="browser">
+    <rect class="actor-node" x="10" y="8" width="70" height="20" rx="6"/>
+    <text class="actor-label" x="45" y="21.5" text-anchor="middle">Browser</text>
+    <line class="actor-lifeline" x1="45" y1="32" x2="45" y2="198"/>
+  </g>
 
-      <g class="actor" data-actor="app">
-        <rect class="actor-node" x="199" y="18" width="82" height="22" rx="6"/>
-        <text class="actor-label" x="240" y="33" text-anchor="middle">Your App</text>
-        <line class="actor-lifeline" x1="240" y1="44" x2="240" y2="188"/>
-      </g>
+  <g class="actor" data-actor="app">
+    <rect class="actor-node" x="133" y="8" width="74" height="20" rx="6"/>
+    <text class="actor-label" x="170" y="21.5" text-anchor="middle">Your App</text>
+    <line class="actor-lifeline" x1="170" y1="32" x2="170" y2="198"/>
+  </g>
 
-      <g class="actor" data-actor="provider">
-        <rect class="actor-node" x="388" y="18" width="74" height="22" rx="6"/>
-        <text class="actor-label" x="425" y="33" text-anchor="middle">Provider</text>
-        <line class="actor-lifeline" x1="425" y1="44" x2="425" y2="188"/>
-      </g>
+  <g class="actor" data-actor="provider">
+    <rect class="actor-node" x="260" y="8" width="70" height="20" rx="6"/>
+    <text class="actor-label" x="295" y="21.5" text-anchor="middle">Provider</text>
+    <line class="actor-lifeline" x1="295" y1="32" x2="295" y2="198"/>
+  </g>
 
-      {# ---- Hop 1: browser is redirected to the provider ---- #}
-      <g class="hop" data-hop="1">
-        <text class="hop-label" x="240" y="58" text-anchor="middle">GET /authorize</text>
-        <line class="hop-line" x1="55" y1="64" x2="419" y2="64"/>
-        <polygon class="hop-head" points="425,64 417,60.5 417,67.5"/>
-        <circle class="hop-pulse" cx="55" cy="64" r="2.5" style="--travel: 364px"/>
-      </g>
+  {# ---- 1. Browser is redirected to the provider ---- #}
+  <g class="hop" data-hop="1">
+    <text class="hop-label" x="170" y="49" text-anchor="middle">GET /authorize</text>
+    <line class="hop-line" x1="45" y1="56" x2="290" y2="56"/>
+    <polygon class="hop-head" points="295,56 288,53 288,59"/>
+  </g>
 
-      {# ---- Hop 2: provider sends the code back through the browser ---- #}
-      <g class="hop" data-hop="2">
-        <text class="hop-label" x="332" y="86" text-anchor="middle">302 ?code=…&amp;state=…</text>
-        <line class="hop-line" x1="425" y1="92" x2="246" y2="92"/>
-        <polygon class="hop-head" points="240,92 248,88.5 248,95.5"/>
-        <circle class="hop-pulse" cx="425" cy="92" r="2.5" style="--travel: -179px"/>
-      </g>
+  {# ---- 2. Provider returns the code through the browser ---- #}
+  <g class="hop" data-hop="2">
+    <text class="hop-label" x="232" y="79" text-anchor="middle">302 ?code=…</text>
+    <line class="hop-line" x1="295" y1="86" x2="175" y2="86"/>
+    <polygon class="hop-head" points="170,86 177,83 177,89"/>
+  </g>
 
-      {# ---- Hop 3: back channel, the secret never touches the browser ---- #}
-      <g class="hop" data-hop="3">
-        <text class="hop-label" x="332" y="114" text-anchor="middle">POST /token</text>
-        <line class="hop-line is-backchannel" x1="240" y1="120" x2="419" y2="120"/>
-        <polygon class="hop-head" points="425,120 417,116.5 417,123.5"/>
-        <circle class="hop-pulse" cx="240" cy="120" r="2.5" style="--travel: 179px"/>
-      </g>
+  {# ---- 3. Back channel, the secret never reaches the browser ---- #}
+  <g class="hop" data-hop="3">
+    <text class="hop-label" x="232" y="109" text-anchor="middle">POST /token</text>
+    <line class="hop-line is-back" x1="170" y1="116" x2="290" y2="116"/>
+    <polygon class="hop-head" points="295,116 288,113 288,119"/>
+  </g>
 
-      {# ---- Hop 4: back channel again ---- #}
-      <g class="hop" data-hop="4">
-        <text class="hop-label" x="332" y="142" text-anchor="middle">GET /userinfo</text>
-        <line class="hop-line is-backchannel" x1="240" y1="148" x2="419" y2="148"/>
-        <polygon class="hop-head" points="425,148 417,144.5 417,151.5"/>
-        <circle class="hop-pulse" cx="240" cy="148" r="2.5" style="--travel: 179px"/>
-      </g>
+  {# ---- 4. Back channel again ---- #}
+  <g class="hop" data-hop="4">
+    <text class="hop-label" x="232" y="139" text-anchor="middle">GET /userinfo</text>
+    <line class="hop-line is-back" x1="170" y1="146" x2="290" y2="146"/>
+    <polygon class="hop-head" points="295,146 288,143 288,149"/>
+  </g>
 
-      {# ---- Hop 5: session handed to the browser ---- #}
-      <g class="hop" data-hop="5">
-        <text class="hop-label" x="148" y="170" text-anchor="middle">Set-Cookie: session</text>
-        <line class="hop-line" x1="240" y1="176" x2="61" y2="176"/>
-        <polygon class="hop-head" points="55,176 63,172.5 63,179.5"/>
-        <circle class="hop-pulse" cx="240" cy="176" r="2.5" style="--travel: -179px"/>
-      </g>
-    </svg>
+  {# ---- 5. Session handed back to the browser ---- #}
+  <g class="hop" data-hop="5">
+    <text class="hop-label" x="107" y="169" text-anchor="middle">Set-Cookie</text>
+    <line class="hop-line" x1="170" y1="176" x2="50" y2="176"/>
+    <polygon class="hop-head" points="45,176 52,173 52,179"/>
+  </g>
+</svg>
 
-    <div class="flow-legend">
-      <span><i class="legend-swatch"></i> Front channel — via the browser, visible</span>
-      <span><i class="legend-swatch dashed"></i> Back channel — server to server, private</span>
-    </div>
-  </div>
+<div class="flow-legend">
+  <span><i class="swatch"></i> Front channel: through the browser</span>
+  <span><i class="swatch dashed"></i> Back channel: server to server</span>
 </div>

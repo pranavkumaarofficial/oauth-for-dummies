@@ -3,26 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Error — {{ app_name }}</title>
+    <title>Error</title>
     <link rel="stylesheet" href="/static/style.css">
+    <script src="/static/theme.js"></script>
 </head>
 <body>
-    <div class="container">
-        <header class="hero hero-small">
-            <a href="/" class="back-link">Back to home</a>
-            <h1>{{ error }}</h1>
-            <p class="tagline">{{ message }}</p>
-        </header>
+    {% include "_topbar.html" %}
 
-        <div class="actions" style="justify-content: center;">
-            <a href="/" class="btn btn-primary">Go Home</a>
+    <div class="container container-narrow band">
+        <div class="stack-s" style="margin-bottom: var(--s-lg);">
+            <p class="eyebrow">Something went wrong</p>
+            <h1>{{ error }}</h1>
+            <p class="body-md muted">{{ message }}</p>
         </div>
 
-        <footer>
-            <p>
-                <a href="https://github.com/pranavkumaarofficial/oauth-for-dummies">Star on GitHub</a>
-            </p>
-        </footer>
+        <div class="actions">
+            <a href="/" class="btn btn-primary">Back to home</a>
+        </div>
     </div>
+
+    {% include "_footer.html" %}
 </body>
 </html>

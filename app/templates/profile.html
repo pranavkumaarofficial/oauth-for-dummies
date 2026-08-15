@@ -3,58 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Profile — {{ app_name }}</title>
+    <title>Profile</title>
     <link rel="stylesheet" href="/static/style.css">
-    <link rel="stylesheet" href="/static/learn.css">
+    <script src="/static/theme.js"></script>
 </head>
 <body>
-    <div class="container container-narrow">
-        <header class="hero hero-small">
-            <a href="/" class="back-link">&larr; Back to home</a>
-            <h1>Signed in</h1>
-            <p class="tagline">This is what your app received from {{ user.provider | capitalize }}.</p>
-        </header>
+    {% include "_topbar.html" %}
 
-        <div class="card">
-            <div class="profile-result">
+    <div class="container container-narrow band">
+        <div class="stack-s" style="margin-bottom: var(--s-lg);">
+            <p class="eyebrow">Signed in</p>
+            <h1>It worked.</h1>
+            <p class="body-md muted">This is what your app received from {{ user.provider }}.</p>
+        </div>
+
+        <div class="card-chrome">
+            <div class="row" style="margin-bottom: var(--s-md);">
+                {% if user.avatar %}<img src="{{ user.avatar }}" alt="" class="avatar avatar-lg">{% endif %}
+                <div>
+                    <div class="title-sm">{{ user.name }}</div>
+                    <div class="body-sm muted">{{ user.email or "no email provided" }}</div>
+                </div>
+            </div>
+
+            <table class="kv">
+                <tr><td class="k">provider</td><td class="v">{{ user.provider }}</td></tr>
+                <tr><td class="k">id</td><td class="v">{{ user.id }}</td></tr>
+                <tr><td class="k">name</td><td class="v">{{ user.name }}</td></tr>
+                <tr><td class="k">email</td><td class="v">{{ user.email or "null" }}</td></tr>
                 {% if user.avatar %}
-                <img src="{{ user.avatar }}" alt="" class="avatar avatar-large">
+                <tr><td class="k">avatar</td><td class="v">{{ user.avatar }}</td></tr>
                 {% endif %}
-
-                <table class="data-table">
-                    <tr><td class="label">provider</td><td class="param-value">{{ user.provider }}</td></tr>
-                    <tr><td class="label">id</td><td class="param-value">{{ user.id }}</td></tr>
-                    <tr><td class="label">name</td><td class="param-value">{{ user.name }}</td></tr>
-                    <tr><td class="label">email</td><td class="param-value">{{ user.email or "null" }}</td></tr>
-                    {% if user.avatar %}
-                    <tr><td class="label">avatar</td><td class="param-value url-cell">{{ user.avatar }}</td></tr>
-                    {% endif %}
-                </table>
-            </div>
-
-            <div class="channel-note">
-                <span>Real data, fetched from the {{ user.provider | capitalize }} API with the access
-                token from the exchange. Your terminal has the full request log.</span>
-            </div>
+            </table>
         </div>
 
-        <div class="card hint-card">
-            <p>Want to see how it got here? <a href="/auth/{{ user.provider }}/login?mode=learn">Run it again in Learn Mode</a>
-            and step through every request.</p>
+        <div class="callout" style="margin-top: var(--s-md);">
+            Real data, fetched from the {{ user.provider }} API with the access token from the
+            exchange. The full request log is in your terminal.
         </div>
 
-        <div class="actions" style="justify-content:center;">
-            <a href="/" class="btn btn-outline btn-sm">Home</a>
-            <a href="/auth/logout" class="btn btn-outline btn-sm">Sign out</a>
+        <div class="actions" style="margin-top: var(--s-lg);">
+            <a href="/auth/{{ user.provider }}/login?mode=learn" class="btn btn-primary">Run it again in Learn Mode</a>
+            <a href="/" class="btn btn-secondary">Home</a>
+            <a href="/auth/logout" class="btn btn-ghost">Sign out</a>
         </div>
-
-        <footer>
-            <p>
-                <a href="https://github.com/pranavkumaarofficial/oauth-for-dummies">Star on GitHub</a>
-                &nbsp;&middot;&nbsp;
-                <a href="https://github.com/pranavkumaarofficial/oauth-for-dummies/blob/main/docs/tutorial.md">Tutorial</a>
-            </p>
-        </footer>
     </div>
+
+    {% include "_footer.html" %}
 </body>
 </html>

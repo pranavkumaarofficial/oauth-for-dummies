@@ -1,5 +1,5 @@
 """
-Demo Provider — a real OAuth 2.0 authorization server, running inside this app.
+Demo Provider: a real OAuth 2.0 authorization server, running inside this app.
 
 This exists so you can walk the entire OAuth flow without registering an app
 with GitHub, Google, or anyone else. Nothing here is faked: your app really does
@@ -9,12 +9,12 @@ with a bearer token. The only difference is that the provider happens to live at
 localhost instead of github.com.
 
 That also makes this the one place in the project where you can read the *other*
-side of OAuth — what the provider does with your request:
+side of OAuth, what the provider does with your request:
 
-  GET  /demo-provider/authorize  — validate the request, show a consent screen
-  GET  /demo-provider/approve    — issue an authorization code, redirect back
-  POST /demo-provider/token      — verify the code (+ secret or PKCE), issue a token
-  GET  /demo-provider/userinfo   — verify the bearer token, return the profile
+  GET  /demo-provider/authorize , validate the request, show a consent screen
+  GET  /demo-provider/approve   , issue an authorization code, redirect back
+  POST /demo-provider/token     , verify the code (+ secret or PKCE), issue a token
+  GET  /demo-provider/userinfo  , verify the bearer token, return the profile
 """
 
 from __future__ import annotations
@@ -83,7 +83,7 @@ async def authorize(
     Step 1, from the provider's side.
 
     A real provider would make you sign in here. We skip that and go straight to
-    the consent screen — but everything else is checked exactly as a real
+    the consent screen, but everything else is checked exactly as a real
     authorization server would check it.
     """
     if client_id != DEMO_CLIENT_ID:
@@ -154,7 +154,7 @@ async def token(
     code_verifier: str = Form(""),
 ):
     """
-    Step 3, from the provider's side — where the app proves who it is.
+    Step 3, from the provider's side, where the app proves who it is.
 
     Note what is being checked, because this is the part tutorials skip: the code
     must exist, be unused, and be unexpired; the redirect_uri must match the one
@@ -225,7 +225,7 @@ async def token(
                 "error": "invalid_client",
                 "error_description": (
                     "client_secret is missing or wrong. PKCE does not replace the secret "
-                    "for confidential clients — it is sent in addition to it."
+                    "for confidential clients, it is sent in addition to it."
                 ),
             },
             status_code=401,
@@ -249,8 +249,8 @@ async def userinfo(request: Request):
     """
     Step 4, from the provider's side.
 
-    The field names here are deliberately not the same as any other provider's —
-    that is the point of the normalize step in your app.
+    The field names here are deliberately unlike any other provider's. That is
+    the point of the normalize step in your app.
     """
     _sweep()
 

@@ -1,5 +1,5 @@
 """
-Provider Registry — auto-discovers and manages OAuth providers.
+Provider Registry: auto-discovers and manages OAuth providers.
 
 Just drop a new provider file in the providers/ folder and it's available.
 No need to edit a config file or register anything manually.
@@ -23,9 +23,9 @@ from app.demo_provider.routes import DEMO_CLIENT_ID, DEMO_CLIENT_SECRET
 # Add new providers here as you build them.
 
 _PROVIDER_CONFIGS: dict[str, dict] = {
-    # The demo provider runs inside this app, so it is always configured —
-    # no registration, no .env, nothing to set up. Its credentials are the
-    # fixed pair the built-in authorization server expects.
+    # The demo provider runs inside this app, so it is always configured. No
+    # registration, no .env, nothing to set up. Its credentials are the fixed
+    # pair the built-in authorization server expects.
     "demo": {
         "class": DemoProvider,
         "client_id": DEMO_CLIENT_ID,

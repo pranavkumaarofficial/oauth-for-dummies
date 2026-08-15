@@ -1,5 +1,5 @@
 """
-GitHub OAuth Provider — the easiest one to start with.
+GitHub OAuth Provider: the easiest one to start with.
 
 GitHub's OAuth is straightforward and well-documented,
 making it the perfect first provider to understand.

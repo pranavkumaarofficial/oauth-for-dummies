@@ -1,5 +1,5 @@
 """
-oauth-for-dummies CLI — add OAuth to your FastAPI project in one command.
+oauth-for-dummies CLI, add OAuth to your FastAPI project in one command.
 
 Usage:
     oauth-init                          # scaffold with all providers
@@ -128,7 +128,7 @@ def main():
     else:
         print(f"  [skip] .env (already exists)")
 
-    # .env is about to hold client secrets — make sure git ignores it
+    # .env is about to hold client secrets, make sure git ignores it
     protected = _protect_env_file(target)
     if protected:
         print(f"  {protected}")
@@ -140,7 +140,7 @@ def main():
     print()
 
     if not copied:
-        print("  Nothing to do — all files already exist.")
+        print("  Nothing to do, all files already exist.")
         print()
         return
 

@@ -3,85 +3,88 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Learn Mode — {{ app_name }}</title>
+    <title>Learn Mode</title>
     <link rel="stylesheet" href="/static/style.css">
     <link rel="stylesheet" href="/static/learn.css">
+    <script src="/static/theme.js"></script>
 </head>
 <body>
-    <div class="container">
-        <header class="hero hero-small">
-            <a href="/" class="back-link">&larr; Back to home</a>
-            <h1>Learn Mode</h1>
-            <p class="tagline">You are about to start a real OAuth flow with {{ provider_display }}.</p>
-        </header>
+    {% include "_topbar.html" %}
 
-        {% include "_flow_diagram.html" %}
+    <div class="container band-tight">
+        <div class="stack-s" style="margin-bottom: var(--s-lg);">
+            <p class="eyebrow">Step 1 of 5</p>
+            <h1>Before the redirect</h1>
+            <p class="body-md muted">Nothing has been sent yet. This is the URL your app just built.</p>
+        </div>
 
-        <div class="card">
-            <div class="step-head">
-                <h2>Authorization request</h2>
-                <span class="badge">Front channel</span>
-            </div>
-            <p>This is the URL your app just built. Nothing has been sent yet.</p>
-
-            <div class="http-request">
-                <span class="http-method">GET</span>
-                <span class="http-url">{{ authorize_url }}</span>
-            </div>
-
-            <p class="section-label">Query parameters</p>
-            <table class="param-table">
-                {% for key, value in params.items() %}
-                <tr>
-                    <td class="param-key">{{ key }}</td>
-                    <td class="param-value">{{ value }}</td>
-                </tr>
-                {% endfor %}
-            </table>
-
-            <div class="channel-note">
-                <span>Every value above will be visible in the address bar. Notice what is
-                <em>not</em> here: your client secret. It never travels through the browser.</span>
-            </div>
-
-            <details class="explainer">
-                <summary>What each parameter does</summary>
-                <div class="explainer-content">
-                    <p><code>client_id</code> identifies your application. Public by design.</p>
-                    <p><code>redirect_uri</code> is where {{ provider_display }} sends the user back. It must match your registration exactly — mismatches here are the most common OAuth error there is.</p>
-                    <p><code>scope</code> is what you are asking permission for. The user sees it on the next screen.</p>
-                    <p><code>state</code> is a random CSRF token. Your app has stored it and set a matching cookie, and will require both to agree on the way back.</p>
-                    <p><code>response_type=code</code> selects the Authorization Code flow.</p>
-                    {% if params.get("code_challenge") %}
-                    <p><code>code_challenge</code> is a SHA-256 hash of a secret your app just generated. {{ provider_display }} will demand the original before issuing a token — that is PKCE.</p>
-                    {% endif %}
+        <div class="debugger">
+            <aside class="rail">
+                <div class="card-mockup flow-card">
+                    {% include "_flow_diagram.html" %}
                 </div>
-            </details>
-        </div>
+            </aside>
 
-        <div class="card hint-card">
-            <p><strong style="color:var(--ink-muted);">Next:</strong> you will land on
-            {{ provider_display }}'s consent screen. After you approve, they redirect back to your
-            app with an authorization code, and the debugger will show you every remaining step
-            with the real captured data.</p>
-        </div>
+            <main>
+                <div class="panel-head">
+                    <div class="panel-meta">
+                        <span class="badge badge-front">Front channel</span>
+                    </div>
+                    <h2>Authorization request</h2>
+                </div>
 
-        <div class="actions" style="justify-content:center;">
-            <a href="{{ full_url }}" class="btn btn-primary">Continue to {{ provider_display }} &rarr;</a>
-            <a href="/" class="btn btn-outline">Cancel</a>
-        </div>
+                <div class="card-chrome">
+                    <span class="label">Request</span>
+                    <div class="req">
+                        <span class="req-method">GET</span>
+                        <span class="req-url">{{ authorize_url }}</span>
+                    </div>
 
-        <footer>
-            <p>
-                <a href="https://github.com/pranavkumaarofficial/oauth-for-dummies">GitHub</a>
-                &nbsp;&middot;&nbsp;
-                <a href="https://github.com/pranavkumaarofficial/oauth-for-dummies/blob/main/docs/tutorial.md">Tutorial</a>
-            </p>
-        </footer>
+                    <span class="label">Query parameters</span>
+                    <table class="kv">
+                        {% for key, value in params.items() %}
+                        <tr><td class="k">{{ key }}</td><td class="v">{{ value }}</td></tr>
+                        {% endfor %}
+                    </table>
+                </div>
+
+                <div class="note">
+                    Everything above will be visible in the address bar. Look at what is
+                    <strong>not</strong> there. Your client secret never travels through the browser.
+                </div>
+
+                <details class="explainer">
+                    <summary>What each parameter does</summary>
+                    <div class="explainer-body">
+                        <p><code>client_id</code> identifies your application. Public by design.</p>
+                        <p><code>redirect_uri</code> is where {{ provider_display }} sends the user back. It has to match your registration exactly. Mismatches here are the most common OAuth error there is.</p>
+                        <p><code>scope</code> is what you are asking permission for. The user sees it on the next screen.</p>
+                        <p><code>state</code> is a random CSRF token. Your app has stored it and set a matching cookie, and will require both to agree on the way back.</p>
+                        <p><code>response_type=code</code> selects the Authorization Code flow.</p>
+                        {% if params.get("code_challenge") %}
+                        <p><code>code_challenge</code> is a SHA-256 hash of a secret your app just generated. {{ provider_display }} will ask for the original before it issues a token. That is PKCE.</p>
+                        {% endif %}
+                    </div>
+                </details>
+
+                <div class="callout" style="margin-top: var(--s-lg);">
+                    <strong>Next:</strong> {{ provider_display }}'s consent screen. Once you approve, they
+                    send you back with an authorization code, and the debugger picks up from there
+                    with the real captured data.
+                </div>
+
+                <div class="actions" style="margin-top: var(--s-lg);">
+                    <a href="{{ full_url }}" class="btn btn-primary">Continue to {{ provider_display }} &rarr;</a>
+                    <a href="/" class="btn btn-ghost">Cancel</a>
+                </div>
+            </main>
+        </div>
     </div>
 
+    {% include "_footer.html" %}
+
     <script>
-      // Light up hop 1 — this page is the moment before the first redirect.
+      // Light up hop 1. This page is the moment before the first redirect.
       document.querySelectorAll('[data-hop="1"]').forEach(function (h) { h.classList.add("is-active"); });
       ["browser", "provider"].forEach(function (name) {
         var a = document.querySelector('[data-actor="' + name + '"]');

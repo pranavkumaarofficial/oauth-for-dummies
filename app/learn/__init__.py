@@ -1,1 +1,1 @@
-"""Learn module — interactive OAuth debugger."""
+"""Learn module: interactive OAuth debugger."""

@@ -1,5 +1,5 @@
 """
-Token Storage — keeps track of logged-in users.
+Token Storage: keeps track of logged-in users.
 
 This is a simple in-memory + JSON file store for learning purposes.
 In production, you'd use a database (PostgreSQL, Redis, etc.).
@@ -19,7 +19,7 @@ STORAGE_FILE = Path(__file__).resolve().parent.parent.parent / ".tokens.json"
 
 # Lifetimes, enforced server-side. A cookie's max_age is only a hint to the
 # browser: a stolen cookie replayed by a script ignores it entirely, so expiry
-# has to happen here. Unbounded growth also matters — /login is unauthenticated,
+# has to happen here. Unbounded growth also matters, /login is unauthenticated,
 # so without eviction anyone can grow the state table just by hitting it.
 STATE_TTL = 600      # 10 minutes to complete a login
 SESSION_TTL = 3600   # 1 hour signed in
@@ -138,7 +138,7 @@ class TokenStore:
         Check if the state token is valid and return the provider name.
         Returns None if the state is unknown or expired (possible CSRF attack!).
 
-        Note this is only half of the check — the caller must ALSO confirm the
+        Note this is only half of the check: the caller must ALSO confirm the
         state matches the cookie set when this browser started the flow, or an
         attacker's state can be redeemed in a victim's browser.
         """
@@ -216,5 +216,5 @@ class TokenStore:
             pass  # Don't crash if we can't write
 
 
-# Global store instance — shared across the app
+# Global store instance: shared across the app
 store = TokenStore()

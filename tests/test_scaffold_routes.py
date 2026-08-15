@@ -1,5 +1,5 @@
 """
-Tests for the SCAFFOLD — the code that oauth-init drops into a user's project.
+Tests for the SCAFFOLD: the code that oauth-init drops into a user's project.
 
 This is the code that actually ships, so it's the code that most needs tests.
 The scaffold imports `oauth_config` as a top-level module (that's how it lands in
@@ -59,7 +59,7 @@ def _load_scaffold_routes(monkeypatch):
 def routes(monkeypatch):
     # Clear COOKIE_SECURE so the suite behaves the same on every machine. The
     # test client speaks http, and browsers (correctly) do not return Secure
-    # cookies over http — so leaving it set would break every cookie-dependent
+    # cookies over http, so leaving it set would break every cookie-dependent
     # test here. The tests that care about the flag set it explicitly.
     monkeypatch.delenv("COOKIE_SECURE", raising=False)
     return _load_scaffold_routes(monkeypatch)
@@ -86,7 +86,7 @@ def example_app(routes, monkeypatch):
 
 
 # ---------------------------------------------------------------------------
-# Login CSRF — the important one
+# Login CSRF: the important one
 # ---------------------------------------------------------------------------
 
 class TestStateIsBoundToBrowser:
@@ -113,7 +113,7 @@ class TestStateIsBoundToBrowser:
         attacker_state = attacker.cookies[routes.STATE_COOKIE]
 
         # Victim's browser has no matching cookie, but the state IS valid
-        # server-side — this is exactly what the old code accepted.
+        # server-side, this is exactly what the old code accepted.
         victim = TestClient(client.app, follow_redirects=False)
         resp = victim.get(
             f"/auth/example/callback?code=stolen-code&state={attacker_state}"
@@ -124,7 +124,7 @@ class TestStateIsBoundToBrowser:
 
     def test_forged_state_matching_cookie_is_still_rejected(self, client):
         """
-        Cookie match alone isn't enough either — the state must be one we issued.
+        Cookie match alone isn't enough either, the state must be one we issued.
         An attacker who can set cookies must not be able to mint their own state.
         """
         client.cookies.set("oauth_state", "forged-state-value")
@@ -270,7 +270,7 @@ class TestTokenErrors:
 
 
 # ---------------------------------------------------------------------------
-# End to end — a full successful login through the generated app
+# End to end: a full successful login through the generated app
 # ---------------------------------------------------------------------------
 
 class TestFullLoginFlow:
@@ -335,7 +335,7 @@ class TestFullLoginFlow:
 
 
 # ---------------------------------------------------------------------------
-# Expiry — enforced server-side, not via cookie max_age
+# Expiry: enforced server-side, not via cookie max_age
 # ---------------------------------------------------------------------------
 
 class TestExpiry:

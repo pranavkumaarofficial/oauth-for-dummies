@@ -1,5 +1,5 @@
 """
-Google OAuth Provider — uses OpenID Connect.
+Google OAuth Provider: uses OpenID Connect.
 
 Google adds a layer on top of OAuth 2.0 called OpenID Connect (OIDC).
 The main difference: you get an `id_token` with user info baked in,

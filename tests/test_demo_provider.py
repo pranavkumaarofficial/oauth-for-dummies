@@ -2,7 +2,7 @@
 Tests for the built-in demo authorization server.
 
 The demo provider is what lets someone try Learn Mode with no credentials, so
-it has to behave like a real provider — including refusing the things a real
+it has to behave like a real provider, including refusing the things a real
 provider refuses. Those refusals are the teaching material.
 
 Run with: pytest tests/ -v
@@ -197,7 +197,7 @@ class TestUserinfo:
 
         assert resp.status_code == 200
         body = resp.json()
-        # Deliberately unusual field names — this is why normalize exists
+        # Deliberately unusual field names: this is why normalize exists
         assert body["display_name"] == "Ada Lovelace"
         assert body["email_address"] == "ada@example.com"
         assert "name" not in body and "email" not in body

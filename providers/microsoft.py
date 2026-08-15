@@ -1,5 +1,5 @@
 """
-Microsoft OAuth Provider — uses Microsoft Identity Platform (v2.0).
+Microsoft OAuth Provider: uses Microsoft Identity Platform (v2.0).
 
 Microsoft's OAuth works with personal accounts (Outlook, Xbox),
 work/school accounts (Azure AD), or both. Uses the "common"

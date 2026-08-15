@@ -1,5 +1,5 @@
 """
-LinkedIn OAuth Provider — uses OpenID Connect.
+LinkedIn OAuth Provider: uses OpenID Connect.
 
 LinkedIn migrated to OpenID Connect in 2023. The new API
 uses standard OIDC scopes and the userinfo endpoint instead

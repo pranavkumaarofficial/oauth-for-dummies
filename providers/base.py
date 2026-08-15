@@ -1,5 +1,5 @@
 """
-Base OAuth Provider — the blueprint every provider follows.
+Base OAuth Provider: the blueprint every provider follows.
 
 Supports both OAuth 2.0 (client_secret) and OAuth 2.1 (PKCE).
 To add a new provider, just subclass this and fill in the URLs.
@@ -29,7 +29,7 @@ class OAuthError(Exception):
 FRIENDLY_TOKEN_ERRORS = {
     "bad_verification_code": (
         "The authorization code was invalid, expired, or already used. Codes are "
-        "single-use and short-lived — start the login again."
+        "single-use and short-lived, start the login again."
     ),
     "invalid_grant": (
         "The provider rejected the authorization code. Usually the code expired, "
@@ -60,7 +60,7 @@ class OAuthToken:
 
 @dataclass
 class UserInfo:
-    """Normalized user profile — same shape regardless of provider."""
+    """Normalized user profile: same shape regardless of provider."""
 
     id: str
     name: str
@@ -118,7 +118,7 @@ class OAuthProvider(ABC):
         """
         Build the token exchange body.
 
-        PKCE does not replace the client secret for confidential clients — it is
+        PKCE does not replace the client secret for confidential clients, it is
         sent *in addition to* it. Only public clients (no secret registered) omit
         the secret. Getting this backwards makes the token request fail with 401
         on GitHub, Google, Discord, Microsoft and LinkedIn.
@@ -175,7 +175,7 @@ class OAuthProvider(ABC):
         Build the URL to redirect the user to for authorization.
 
         Returns:
-            (url, state) — the full URL and the state token for CSRF protection.
+            (url, state), the full URL and the state token for CSRF protection.
 
         If use_pkce is True, also returns code_verifier as third element.
         """
@@ -200,7 +200,7 @@ class OAuthProvider(ABC):
         url = f"{self.authorize_url}?{urlencode(params)}"
 
         print(f"\n{'='*60}")
-        print(f"  STEP 1 — Redirect user to {self.display_name}")
+        print(f"  STEP 1, Redirect user to {self.display_name}")
         print(f"{'='*60}")
         print(f"  URL: {self.authorize_url}")
         print(f"  client_id:    {self.client_id[:8]}...")
@@ -222,14 +222,14 @@ class OAuthProvider(ABC):
         Exchange the authorization code for an access token.
 
         This is the POST request your app makes server-to-server.
-        The user never sees this — it happens in the background.
+        The user never sees this: it happens in the background.
 
         If PKCE is enabled, pass code_verifier instead of using client_secret.
         """
         data = self._build_token_data(code, code_verifier)
 
         print(f"\n{'='*60}")
-        print(f"  STEP 3 — Exchange code for token")
+        print(f"  STEP 3, Exchange code for token")
         print(f"{'='*60}")
         print(f"  POST {self.token_url}")
         print(f"  code:   {code[:16]}...")
@@ -267,10 +267,10 @@ class OAuthProvider(ABC):
         """
         Use the access token to fetch the user's profile.
 
-        This is the "payoff" — the whole reason we did OAuth.
+        This is the "payoff", the whole reason we did OAuth.
         """
         print(f"\n{'='*60}")
-        print(f"  STEP 4 — Fetch user info from {self.display_name}")
+        print(f"  STEP 4, Fetch user info from {self.display_name}")
         print(f"{'='*60}")
         print(f"  GET {self.userinfo_url}")
         print(f"  Authorization: Bearer {token.access_token[:12]}...")
@@ -330,7 +330,7 @@ class OAuthProvider(ABC):
         url = f"{self.authorize_url}?{urlencode(params)}"
 
         print(f"\n{'='*60}")
-        print(f"  STEP 1 — Redirect user to {self.display_name}")
+        print(f"  STEP 1, Redirect user to {self.display_name}")
         print(f"{'='*60}")
         print(f"  URL: {self.authorize_url}")
         print(f"  client_id:    {self.client_id[:8]}...")
@@ -363,7 +363,7 @@ class OAuthProvider(ABC):
         data = self._build_token_data(code, code_verifier)
 
         print(f"\n{'='*60}")
-        print(f"  STEP 3 — Exchange code for token")
+        print(f"  STEP 3, Exchange code for token")
         print(f"{'='*60}")
         print(f"  POST {self.token_url}")
         print(f"  code:   {code[:16]}...")
@@ -429,7 +429,7 @@ class OAuthProvider(ABC):
     async def get_userinfo_detailed(self, token: OAuthToken) -> dict:
         """Like get_userinfo, but captures request/response data."""
         print(f"\n{'='*60}")
-        print(f"  STEP 4 — Fetch user info from {self.display_name}")
+        print(f"  STEP 4, Fetch user info from {self.display_name}")
         print(f"{'='*60}")
         print(f"  GET {self.userinfo_url}")
         print(f"  Authorization: Bearer {token.access_token[:12]}...")

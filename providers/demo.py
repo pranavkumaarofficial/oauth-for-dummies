@@ -1,5 +1,5 @@
 """
-Demo Provider — points at the OAuth server running inside this app.
+Demo Provider: points at the OAuth server running inside this app.
 
 Nothing about the client side is special: this is an ordinary OAuthProvider
 subclass, identical in shape to github.py. The only difference is that its
@@ -7,7 +7,7 @@ endpoints resolve to localhost, so you can walk the whole flow without
 registering an application anywhere.
 
 PKCE is enabled here so the demo exercises it end to end. Note that the demo is
-still a *confidential* client — it sends the client secret as well as the PKCE
+still a *confidential* client, it sends the client secret as well as the PKCE
 verifier, which is what real web apps must do.
 """
 
@@ -39,7 +39,7 @@ class DemoProvider(OAuthProvider):
         """
         The demo provider returns user_id / display_name / email_address.
 
-        No other provider uses those names — that is deliberate. It shows why
+        No other provider uses those names: that is deliberate. It shows why
         this normalize step has to exist at all.
         """
         return UserInfo(

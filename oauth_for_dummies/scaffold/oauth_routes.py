@@ -1,5 +1,5 @@
 """
-OAuth Routes — handles login, callback, and logout.
+OAuth Routes: handles login, callback, and logout.
 
 Supports OAuth 2.0 (client_secret) and OAuth 2.1 (PKCE).
 Drop this into your FastAPI app:
@@ -28,19 +28,19 @@ from oauth_config import OAUTH_PROVIDERS, OAUTH_BASE_URL
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 # In-memory state + session storage (swap for Redis/DB in production).
-# Each entry carries the time it was created so it can be expired — see _sweep().
+# Each entry carries the time it was created so it can be expired, see _sweep().
 _pending_states: dict[str, tuple[str, float]] = {}   # state -> (provider, created_at)
 _code_verifiers: dict[str, str] = {}                  # PKCE: state -> code_verifier
 _sessions: dict[str, tuple[dict, float]] = {}         # session_id -> (user, created_at)
 
 # The state token is ALSO stored in this cookie, so we can prove that the browser
 # finishing the flow is the same one that started it. Without this, anyone who
-# obtains a valid state can have it redeemed by someone else's browser — that's
+# obtains a valid state can have it redeemed by someone else's browser, that's
 # login CSRF, and it lets an attacker log a victim into the attacker's account.
 STATE_COOKIE = "oauth_state"
 
 # Lifetimes, enforced SERVER-side. A cookie's max_age is only a hint to the
-# browser — anyone replaying a stolen cookie simply ignores it — so the server
+# browser, anyone replaying a stolen cookie simply ignores it, so the server
 # has to do the expiring itself.
 STATE_TTL = 600      # 10 minutes to complete a login
 SESSION_TTL = 3600   # 1 hour signed in
@@ -49,7 +49,7 @@ SESSION_TTL = 3600   # 1 hour signed in
 #
 # Leave it OFF for local http://localhost development. Browsers do not send
 # Secure cookies over plain http, so turning this on while serving http makes
-# the state cookie never come back — logins then fail with "State did not match
+# the state cookie never come back, logins then fail with "State did not match
 # this browser's login attempt", which looks like a bug but is the flag working.
 COOKIE_SECURE = os.getenv("COOKIE_SECURE", "").lower() in ("1", "true", "yes")
 
@@ -57,7 +57,7 @@ COOKIE_SECURE = os.getenv("COOKIE_SECURE", "").lower() in ("1", "true", "yes")
 # NOTE: PKCE is sent *in addition to* client_secret. It does not replace it.
 PKCE_PROVIDERS: set[str] = set()
 
-# Providers registered as *public* clients (mobile/SPA style — no client secret).
+# Providers registered as *public* clients (mobile/SPA style, no client secret).
 # Only these skip client_secret at the token endpoint. Most web apps are
 # confidential clients and must keep sending the secret, even with PKCE enabled.
 PUBLIC_CLIENTS: set[str] = set()
@@ -118,7 +118,7 @@ def _generate_code_challenge(verifier: str) -> str:
 _FRIENDLY_ERRORS = {
     "bad_verification_code": (
         "The authorization code was invalid, expired, or already used. "
-        "Authorization codes are single-use and short-lived — start the login again."
+        "Authorization codes are single-use and short-lived, start the login again."
     ),
     "invalid_grant": (
         "The provider rejected the authorization code. It usually means the code "
@@ -188,7 +188,7 @@ def _normalize_user(provider: str, raw: dict, access_token: str | None = None) -
             "avatar": raw.get("avatar_url"),
             "provider": provider,
         }
-        # GitHub sometimes hides email — try the emails endpoint
+        # GitHub sometimes hides email: try the emails endpoint
         if not user["email"] and access_token:
             try:
                 resp = httpx.get(
@@ -317,7 +317,7 @@ async def login(provider: str):
 
 @router.get("/{provider}/callback")
 async def callback(request: Request, provider: str, code: str = "", state: str = ""):
-    """Handle the OAuth callback — exchange code for token, fetch user info."""
+    """Handle the OAuth callback: exchange code for token, fetch user info."""
     # ---- Verify state (CSRF protection) ----
     # Two checks, and both matter:
     #   1. the state must match the cookie we set at /login  (same browser)
@@ -354,7 +354,7 @@ async def callback(request: Request, provider: str, code: str = "", state: str =
     }
 
     # Confidential clients (most web apps) must send client_secret. PKCE is an
-    # *extra* proof on top of it, not a replacement — only genuinely public
+    # *extra* proof on top of it, not a replacement, only genuinely public
     # clients registered without a secret may omit it.
     if provider not in PUBLIC_CLIENTS:
         token_data["client_secret"] = config["client_secret"]
