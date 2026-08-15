@@ -31,35 +31,35 @@
   </g>
 
   {# ---- 1. Browser is redirected to the provider ---- #}
-  <g class="hop" data-hop="1">
+  <g class="hop" data-hop="1" data-channel="front">
     <text class="hop-label" x="170" y="49" text-anchor="middle">GET /authorize</text>
     <line class="hop-line" x1="45" y1="56" x2="290" y2="56"/>
     <polygon class="hop-head" points="295,56 288,53 288,59"/>
   </g>
 
   {# ---- 2. Provider returns the code through the browser ---- #}
-  <g class="hop" data-hop="2">
+  <g class="hop" data-hop="2" data-channel="front">
     <text class="hop-label" x="232" y="79" text-anchor="middle">302 ?code=…</text>
     <line class="hop-line" x1="295" y1="86" x2="175" y2="86"/>
     <polygon class="hop-head" points="170,86 177,83 177,89"/>
   </g>
 
   {# ---- 3. Back channel, the secret never reaches the browser ---- #}
-  <g class="hop" data-hop="3">
+  <g class="hop" data-hop="3" data-channel="back">
     <text class="hop-label" x="232" y="109" text-anchor="middle">POST /token</text>
     <line class="hop-line is-back" x1="170" y1="116" x2="290" y2="116"/>
     <polygon class="hop-head" points="295,116 288,113 288,119"/>
   </g>
 
   {# ---- 4. Back channel again ---- #}
-  <g class="hop" data-hop="4">
+  <g class="hop" data-hop="4" data-channel="back">
     <text class="hop-label" x="232" y="139" text-anchor="middle">GET /userinfo</text>
     <line class="hop-line is-back" x1="170" y1="146" x2="290" y2="146"/>
     <polygon class="hop-head" points="295,146 288,143 288,149"/>
   </g>
 
   {# ---- 5. Session handed back to the browser ---- #}
-  <g class="hop" data-hop="5">
+  <g class="hop" data-hop="5" data-channel="front">
     <text class="hop-label" x="107" y="169" text-anchor="middle">Set-Cookie</text>
     <line class="hop-line" x1="170" y1="176" x2="50" y2="176"/>
     <polygon class="hop-head" points="45,176 52,173 52,179"/>

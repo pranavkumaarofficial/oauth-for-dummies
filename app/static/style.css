@@ -43,27 +43,51 @@
        tell one kind of value from another, never for decoration. */
     --data-key: #5b6472;
     --data-value: #111111;
-    --data-url: #1d4ed8;
-    --data-secret: #a1560f;
-    --data-verified: #047857;
+    --data-url: var(--front);
+    --data-secret: var(--sensitive);
+    --data-verified: var(--back);
 
-    /* Action layer: monochrome by design */
-    --primary: #111111;
-    --primary-active: #242424;
+    /* ---- The palette. Three colors, each with one job. ----
 
-    /* Accent, used sparely */
-    --brand-accent: #3b82f6;
+       Cal's action layer is monochrome and its accents are reserved for
+       badges. We depart from that deliberately so the interface has some
+       life, but no further than three hues.
 
-    /* Badge pastels: badges and product fragments only, never CTAs */
-    --badge-orange: #fb923c;
-    --badge-pink: #ec4899;
-    --badge-violet: #8b5cf6;
-    --badge-emerald: #34d399;
+       azure    brand + front channel   logo, buttons, eyebrows, active
+                                        step, links, browser-visible hops
+       emerald  back channel            server-to-server hops, verified
+       amber    sensitive               secrets, verifiers, tokens
+
+       Brand and front channel share the azure on purpose. Giving them
+       separate blues would put two near-identical colors on screen with
+       different meanings, which teaches nothing and just looks busy.
+
+       A color never appears without meaning one of those three things.
+       Everything else is neutral. */
+    --brand: #0369a1;
+    --brand-hover: #075985;
+    --brand-dim: rgba(14, 165, 233, 0.11);
+    --brand-line: rgba(3, 105, 161, 0.30);
+
+    --front: var(--brand);
+    --front-dim: var(--brand-dim);
+
+    --back: #047857;
+    --back-dim: rgba(5, 150, 105, 0.12);
+
+    --sensitive: #b45309;
+    --sensitive-dim: rgba(180, 83, 9, 0.10);
+
+    /* Action layer now carries the brand */
+    --primary: var(--brand);
+    --primary-active: var(--brand-hover);
+
+    --brand-accent: var(--front);
 
     /* Semantic */
-    --success: #10b981;
-    --warning: #f59e0b;
-    --error: #ef4444;
+    --success: var(--back);
+    --warning: #b45309;
+    --error: #dc2626;
 
     /* Spacing: 4px base */
     --s-xxs: 4px;  --s-xs: 8px;   --s-sm: 12px;  --s-md: 16px;
@@ -101,19 +125,38 @@
     --muted: #a1a1aa;
     --muted-soft: #8a8a8f;
 
-    --primary: #fafafa;
-    --primary-active: #e4e4e7;
-    --on-primary: #111111;
+    /* Same three hues, lifted for a dark ground */
+    --brand: #38bdf8;
+    --brand-hover: #7dd3fc;
+    --brand-dim: rgba(56, 189, 248, 0.16);
+    --brand-line: rgba(56, 189, 248, 0.38);
 
-    --brand-accent: #60a5fa;
+    --front: var(--brand);
+    --front-dim: var(--brand-dim);
+
+    --back: #34d399;
+    --back-dim: rgba(52, 211, 153, 0.16);
+
+    --sensitive: #fbbf24;
+    --sensitive-dim: rgba(251, 191, 36, 0.15);
+
+    --primary: var(--brand);
+    --primary-active: var(--brand-hover);
+    --on-primary: #04202e;
+
+    --brand-accent: var(--front);
+    --success: var(--back);
+    --warning: var(--sensitive);
+    --error: #f87171;
+
     --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
     --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
 
     --data-key: #9ca3af;
     --data-value: #fafafa;
-    --data-url: #7dd3fc;
-    --data-secret: #fbbf24;
-    --data-verified: #34d399;
+    --data-url: var(--front);
+    --data-secret: var(--sensitive);
+    --data-verified: var(--back);
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -152,14 +195,19 @@ h3 { font-size: 22px; line-height: 1.3;  letter-spacing: -0.3px; }
 .muted { color: var(--muted); }
 .muted-soft { color: var(--muted-soft); }
 
+/* Eyebrows sit above every h1, so coloring them frames each heading
+   without touching the readability of the heading itself. */
 .eyebrow {
     font-size: 13px;
     font-weight: 600;
     line-height: 1.4;
-    color: var(--muted);
+    color: var(--brand);
     text-transform: uppercase;
     letter-spacing: 0.6px;
 }
+
+/* One colored phrase in the hero headline. Once per page, never more. */
+.accent { color: var(--brand); }
 
 code, .mono {
     font-family: var(--mono);
@@ -205,6 +253,9 @@ a:hover { text-decoration: underline; }
     gap: var(--s-md);
 }
 .wordmark {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-xs);
     font-family: var(--display);
     font-weight: 700;
     font-size: 16px;
@@ -212,6 +263,20 @@ a:hover { text-decoration: underline; }
     color: var(--ink);
 }
 .wordmark:hover { text-decoration: none; }
+
+/* The mark is the flow in miniature: a hop out, a hop back. */
+.logo-mark {
+    display: grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    flex-shrink: 0;
+    border-radius: var(--r-md);
+    background: var(--brand);
+    color: #ffffff;
+}
+[data-theme="dark"] .logo-mark { color: var(--on-primary); }
+.logo-mark svg { width: 15px; height: 15px; }
 .topbar-spacer { flex: 1; }
 
 .topbar-nav { display: flex; gap: var(--s-md); margin-left: var(--s-xs); }
@@ -299,7 +364,15 @@ a:hover { text-decoration: underline; }
 .btn:hover { text-decoration: none; }
 
 .btn-primary { background: var(--primary); color: var(--on-primary); }
+.btn-primary:hover { background: var(--primary-active); }
 .btn-primary:active { background: var(--primary-active); }
+
+/* Keyboard focus follows the brand, so tabbing is visible on every control. */
+:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+    border-radius: var(--r-sm);
+}
 
 .btn-secondary {
     background: var(--canvas);
@@ -341,13 +414,11 @@ a:hover { text-decoration: underline; }
 }
 [data-theme="dark"] .badge { background: var(--surface-strong); }
 
-.badge-front   { background: rgba(59, 130, 246, 0.10); color: var(--brand-accent); }
-.badge-back    { background: rgba(16, 185, 129, 0.12); color: #047857; }
-.badge-code    { background: rgba(139, 92, 246, 0.12); color: var(--badge-violet); }
-.badge-success { background: rgba(16, 185, 129, 0.12); color: #047857; }
-
-[data-theme="dark"] .badge-back,
-[data-theme="dark"] .badge-success { color: var(--success); }
+.badge-front   { background: var(--front-dim);     color: var(--front); }
+.badge-back    { background: var(--back-dim);      color: var(--back); }
+.badge-brand   { background: var(--brand-dim);     color: var(--brand); }
+.badge-success { background: var(--back-dim);      color: var(--back); }
+.badge-warn    { background: var(--sensitive-dim); color: var(--sensitive); }
 
 /* ---- Tables ---- */
 
@@ -479,7 +550,7 @@ a:hover { text-decoration: underline; }
     border-radius: var(--r-lg);
     margin-bottom: var(--s-xs);
 }
-.provider-featured { box-shadow: var(--shadow-md); }
+.provider-featured { box-shadow: var(--shadow-md); border-color: var(--brand-line); }
 .provider-off { background: var(--surface-soft); border-color: var(--hairline-soft); }
 
 .provider-mark {

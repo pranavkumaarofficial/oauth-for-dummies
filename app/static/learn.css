@@ -38,7 +38,7 @@
     stroke-width: 1;
     transition: fill var(--ease), stroke var(--ease);
 }
-.actor.is-active .actor-node { fill: var(--ink); stroke: var(--ink); }
+.actor.is-active .actor-node { fill: var(--brand); stroke: var(--brand); }
 
 .actor-label {
     font-family: var(--font);
@@ -57,11 +57,16 @@
 .hop.is-active { opacity: 1; }
 
 .hop-line { stroke: var(--muted-soft); stroke-width: 1; transition: stroke var(--ease), stroke-width var(--ease); }
-.hop.is-active .hop-line { stroke: var(--ink); stroke-width: 1.5; }
 .hop-line.is-back { stroke-dasharray: 3 2.5; }
 
 .hop-head { fill: var(--muted-soft); transition: fill var(--ease); }
-.hop.is-active .hop-head { fill: var(--ink); }
+
+/* An active hop takes the color of its channel, so the diagram, the rail
+   and the badge on the panel all say the same thing at once. */
+.hop.is-active[data-channel="front"] .hop-line { stroke: var(--front); stroke-width: 1.5; }
+.hop.is-active[data-channel="front"] .hop-head { fill: var(--front); }
+.hop.is-active[data-channel="back"]  .hop-line { stroke: var(--back);  stroke-width: 1.5; }
+.hop.is-active[data-channel="back"]  .hop-head { fill: var(--back); }
 
 .hop-label {
     font-family: var(--mono);
@@ -104,7 +109,7 @@
     transition: background var(--ease), color var(--ease);
 }
 .step-item:hover { background: var(--surface-soft); color: var(--ink); }
-.step-item.is-active { background: var(--surface-card); color: var(--ink); }
+.step-item.is-active { background: var(--brand-dim); color: var(--ink); }
 
 .step-index {
     display: grid;
@@ -118,8 +123,13 @@
     color: var(--muted-soft);
     transition: background var(--ease), color var(--ease), border-color var(--ease);
 }
-.step-item.is-active .step-index { background: var(--ink); border-color: var(--ink); color: var(--canvas); }
-.step-item.is-past .step-index { border-color: var(--muted-soft); color: var(--muted); }
+.step-item.is-active .step-index { background: var(--brand); border-color: var(--brand); color: #fff; }
+[data-theme="dark"] .step-item.is-active .step-index { color: var(--on-primary); }
+.step-item.is-past .step-index { border-color: var(--back); color: var(--back); }
+
+/* Channel labels borrow the hop colors, so the rail and the diagram agree. */
+.step-item[data-channel="front"] .step-channel { color: var(--front); }
+.step-item[data-channel="back"] .step-channel { color: var(--back); }
 
 .step-name { font-size: 14px; font-weight: 500; }
 .step-item.is-active .step-name { font-weight: 600; }
