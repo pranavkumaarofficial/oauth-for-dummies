@@ -1,0 +1,222 @@
+/* ============================================================
+   Learn Mode — the flow diagram and stepper.
+
+   The diagram is the spine of the whole experience. It answers the
+   question that trips everyone up: which hops does the browser see,
+   and which happen server-to-server where no one can intercept them?
+
+   Solid lines are browser-visible redirects. Dashed lines are
+   back-channel calls the user never sees. That single distinction is
+   why the client secret is safe, and it is the thing a wall of text
+   fails to convey.
+   ============================================================ */
+
+/* ---- Diagram ---- */
+
+.flow {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: linear-gradient(to bottom, var(--canvas) 72%, transparent);
+    padding: 1rem 0 1.25rem;
+    margin-bottom: 0.5rem;
+}
+
+.flow-stage {
+    background: var(--surface-1);
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius-xl);
+    padding: 1.125rem 1.25rem 0.875rem;
+}
+
+.flow-svg { display: block; width: 100%; height: auto; }
+
+/* Actor columns */
+.actor-label {
+    font-family: var(--font);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    fill: var(--ink-tertiary);
+    transition: fill var(--step);
+}
+.actor.is-active .actor-label { fill: var(--ink); }
+
+.actor-node {
+    fill: var(--surface-3);
+    stroke: var(--hairline-strong);
+    stroke-width: 1;
+    transition: fill var(--step), stroke var(--step);
+}
+.actor.is-active .actor-node { fill: var(--primary-dim); stroke: var(--primary); }
+
+.actor-lifeline { stroke: var(--hairline-tertiary); stroke-width: 1; }
+
+/* Hops */
+.hop { opacity: 0.18; transition: opacity var(--step); }
+.hop.is-past { opacity: 0.4; }
+.hop.is-active { opacity: 1; }
+
+.hop-line {
+    stroke: var(--ink-tertiary);
+    stroke-width: 1.25;
+    transition: stroke var(--step);
+}
+.hop.is-active .hop-line { stroke: var(--primary-hover); stroke-width: 1.75; }
+.hop.is-past .hop-line { stroke: var(--ink-subtle); }
+
+/* Dashed = back channel, invisible to the browser */
+.hop-line.is-backchannel { stroke-dasharray: 4 3; }
+
+.hop-head { fill: var(--ink-tertiary); transition: fill var(--step); }
+.hop.is-active .hop-head { fill: var(--primary-hover); }
+.hop.is-past .hop-head { fill: var(--ink-subtle); }
+
+.hop-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    fill: var(--ink-tertiary);
+    transition: fill var(--step);
+}
+.hop.is-active .hop-label { fill: var(--ink); }
+.hop.is-past .hop-label { fill: var(--ink-subtle); }
+
+/* Travelling pulse on the active hop */
+.hop-pulse { fill: var(--primary-hover); opacity: 0; }
+.hop.is-active .hop-pulse { opacity: 1; animation: travel 1.6s ease-in-out infinite; }
+
+@keyframes travel {
+    0%   { transform: translateX(0); opacity: 0; }
+    12%  { opacity: 1; }
+    88%  { opacity: 1; }
+    100% { transform: translateX(var(--travel, 100px)); opacity: 0; }
+}
+
+/* Legend */
+.flow-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 0.5rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--hairline-tertiary);
+    font-size: 0.6875rem;
+    color: var(--ink-tertiary);
+}
+.flow-legend span { display: inline-flex; align-items: center; gap: 0.4rem; }
+.legend-swatch { width: 18px; height: 0; border-top: 1.5px solid var(--ink-subtle); }
+.legend-swatch.dashed { border-top-style: dashed; }
+
+/* ---- Stepper ---- */
+
+.stepper {
+    display: flex;
+    gap: 0.25rem;
+    margin-bottom: 1.25rem;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+.stepper::-webkit-scrollbar { display: none; }
+
+.step-tab {
+    flex: 1;
+    min-width: 104px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    background: none;
+    border: none;
+    padding: 0.5rem 0 0;
+    cursor: pointer;
+    font-family: inherit;
+    text-align: left;
+    color: var(--ink-tertiary);
+    transition: color var(--step);
+    border-top: 2px solid var(--hairline);
+}
+.step-tab:hover { color: var(--ink-muted); }
+.step-tab.is-past { color: var(--ink-subtle); border-top-color: var(--hairline-strong); }
+.step-tab.is-active { color: var(--ink); border-top-color: var(--primary); }
+
+.step-tab-num {
+    font-family: var(--mono);
+    font-size: 0.625rem;
+    letter-spacing: 0.5px;
+}
+.step-tab-name {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    letter-spacing: -0.1px;
+}
+
+/* ---- Panels ---- */
+
+/* Without JavaScript every panel stays visible and the page reads as one
+   document. The stepper only takes over once learn.js adds .is-enhanced. */
+.stepper, .step-nav { display: none; }
+
+.is-enhanced .stepper,
+.is-enhanced .step-nav { display: flex; }
+
+.is-enhanced .step-panel { display: none; }
+.is-enhanced .step-panel.is-active { display: block; animation: rise var(--step) both; }
+
+@keyframes rise {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: none; }
+}
+
+.step-head {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.375rem;
+}
+.step-head .badge { align-self: center; }
+
+.channel-note {
+    display: flex;
+    gap: 0.6rem;
+    align-items: flex-start;
+    background: var(--surface-2);
+    border: 1px solid var(--hairline);
+    border-left: 2px solid var(--primary);
+    border-radius: var(--radius-md);
+    padding: 0.75rem 0.875rem;
+    font-size: 0.8125rem;
+    color: var(--ink-muted);
+    margin-top: 1.25rem;
+}
+.channel-note.is-backchannel { border-left-color: var(--success); }
+
+/* ---- Navigation ---- */
+
+.step-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-top: 1.5rem;
+}
+.step-nav-count {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    color: var(--ink-tertiary);
+}
+
+/* ---- Timing ---- */
+
+.timing {
+    font-family: var(--mono);
+    font-size: 0.6875rem;
+    color: var(--ink-tertiary);
+}
+
+@media (max-width: 640px) {
+    .flow { position: static; }
+    .step-tab { min-width: 84px; }
+    .step-tab-name { font-size: 0.75rem; }
+}

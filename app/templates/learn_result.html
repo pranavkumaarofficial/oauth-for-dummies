@@ -5,187 +5,249 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OAuth Debugger — {{ app_name }}</title>
     <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="/static/learn.css">
 </head>
 <body>
     <div class="container">
         <header class="hero hero-small">
-            <a href="/" class="back-link">Back to home</a>
+            <a href="/" class="back-link">&larr; Back to home</a>
             <h1>OAuth Debugger</h1>
-            <p class="tagline">Here is everything that happened with {{ debug.provider | capitalize }}.</p>
+            <p class="tagline">Every request your app made to {{ debug.provider | capitalize }}, in order.</p>
         </header>
 
-        <!-- Progress -->
-        <div class="debugger-progress">
-            <div class="debugger-progress-step done">1. Authorize</div>
-            <div class="debugger-progress-step done">2. Callback</div>
-            <div class="debugger-progress-step done">3. Token</div>
-            <div class="debugger-progress-step done">4. User Info</div>
-            <div class="debugger-progress-step done">5. Profile</div>
-        </div>
+        {% include "_flow_diagram.html" %}
 
-        <!-- Step 1: Authorization Request -->
-        <div class="card">
-            <h2>Step 1 — Authorization Request</h2>
-            <p>Your app redirected you to {{ debug.provider | capitalize }} with these parameters:</p>
+        <div data-stepper>
 
-            <div class="http-request">
-                <span class="http-method">GET</span>
-                <span class="http-url">{{ debug.authorize_url }}</span>
+            <div class="stepper" role="tablist" aria-label="OAuth steps">
+                <button class="step-tab" data-step-tab="1" role="tab">
+                    <span class="step-tab-num">01</span>
+                    <span class="step-tab-name">Authorize</span>
+                </button>
+                <button class="step-tab" data-step-tab="2" role="tab">
+                    <span class="step-tab-num">02</span>
+                    <span class="step-tab-name">Callback</span>
+                </button>
+                <button class="step-tab" data-step-tab="3" role="tab">
+                    <span class="step-tab-num">03</span>
+                    <span class="step-tab-name">Token</span>
+                </button>
+                <button class="step-tab" data-step-tab="4" role="tab">
+                    <span class="step-tab-num">04</span>
+                    <span class="step-tab-name">User Info</span>
+                </button>
+                <button class="step-tab" data-step-tab="5" role="tab">
+                    <span class="step-tab-num">05</span>
+                    <span class="step-tab-name">Profile</span>
+                </button>
             </div>
 
-            <table class="param-table">
-                {% for key, value in debug.authorize_params.items() %}
-                <tr>
-                    <td class="param-key">{{ key }}</td>
-                    <td class="param-value">{{ value }}</td>
-                </tr>
-                {% endfor %}
-            </table>
-
-            <details class="explainer">
-                <summary>What just happened?</summary>
-                <div class="explainer-content">
-                    <p>Your app built a URL with your <code>client_id</code>, the permissions you need (<code>scope</code>), and a random <code>state</code> token for CSRF protection. The user's browser was redirected to this URL.</p>
-                    <p>{{ debug.provider | capitalize }} showed a consent screen asking the user to approve the requested permissions.</p>
+            <!-- ============ Step 1 ============ -->
+            <section class="step-panel card" data-step="1" id="step-1" role="tabpanel">
+                <div class="step-head">
+                    <h2>Authorization request</h2>
+                    <span class="badge">Front channel</span>
                 </div>
-            </details>
-        </div>
+                <p>Your app built this URL and redirected the browser to it.</p>
 
-        <!-- Step 2: Callback -->
-        <div class="card">
-            <h2>Step 2 — Callback Received</h2>
-            <p>{{ debug.provider | capitalize }} redirected the user back with these query parameters:</p>
-
-            <table class="param-table">
-                <tr>
-                    <td class="param-key">code</td>
-                    <td class="param-value">{{ debug.callback_code }}</td>
-                </tr>
-                <tr>
-                    <td class="param-key">state</td>
-                    <td class="param-value">{{ debug.callback_state }} <span class="verified-badge">verified</span></td>
-                </tr>
-            </table>
-
-            <details class="explainer">
-                <summary>What just happened?</summary>
-                <div class="explainer-content">
-                    <p>{{ debug.provider | capitalize }} redirected the user back to your <code>redirect_uri</code> with two query parameters: <code>code</code> and <code>state</code>.</p>
-                    <p>The <code>code</code> is an authorization code. It is short-lived (usually 10 minutes) and can only be used once. It is NOT an access token.</p>
-                    <p>The <code>state</code> matches what your app sent in Step 1. If it did not match, your app would reject the request to prevent CSRF attacks.</p>
+                <div class="http-request">
+                    <span class="http-method">GET</span>
+                    <span class="http-url">{{ debug.authorize_url }}</span>
                 </div>
-            </details>
-        </div>
 
-        <!-- Step 3: Token Exchange -->
-        <div class="card">
-            <h2>Step 3 — Token Exchange</h2>
-            <p>Your server exchanged the code for an access token. This happens server-to-server — the user's browser is not involved.</p>
-
-            <div class="http-request">
-                <span class="http-method">POST</span>
-                <span class="http-url">{{ debug.token_request_url }}</span>
-            </div>
-
-            <p class="section-label">Request body:</p>
-            <div class="code-block">{% for key, value in debug.token_request_body.items() %}{{ key }}: {{ value }}
-{% endfor %}</div>
-
-            <p class="section-label">Response:</p>
-            <div class="code-block">{% for key, value in debug.token_response_raw.items() %}{{ key }}: {{ value }}
-{% endfor %}</div>
-
-            <details class="explainer">
-                <summary>What just happened?</summary>
-                <div class="explainer-content">
-                    <p>Your app made a server-to-server POST request to the token endpoint. This request includes the <code>client_secret</code>, which proves your app's identity. The secret should never be exposed to the frontend.</p>
-                    <p>The <code>code</code> from Step 2 was exchanged for an <code>access_token</code>. The code can only be used once — if someone intercepted it, they cannot reuse it.</p>
-                    <p>The <code>access_token</code> is what your app uses to make API calls on behalf of the user.</p>
-                </div>
-            </details>
-        </div>
-
-        <!-- Step 4: User Info -->
-        <div class="card">
-            <h2>Step 4 — Fetch User Info</h2>
-            <p>Your app used the access token to call the {{ debug.provider | capitalize }} API:</p>
-
-            <div class="http-request">
-                <span class="http-method">GET</span>
-                <span class="http-url">{{ debug.userinfo_request_url }}</span>
-            </div>
-
-            <table class="param-table">
-                {% for key, value in debug.userinfo_request_headers.items() %}
-                <tr>
-                    <td class="param-key">{{ key }}</td>
-                    <td class="param-value">{{ value }}</td>
-                </tr>
-                {% endfor %}
-            </table>
-
-            <p class="section-label">Raw API response:</p>
-            <div class="code-block json-block">{{ debug.userinfo_response_raw | tojson(indent=2) }}</div>
-
-            <details class="explainer">
-                <summary>What just happened?</summary>
-                <div class="explainer-content">
-                    <p>Your app made a GET request to the user info endpoint, passing the access token in the <code>Authorization</code> header with the <code>Bearer</code> prefix.</p>
-                    <p>The response contains the user's profile data in {{ debug.provider | capitalize }}'s format. Every provider returns data in a different JSON shape — that is why the next step normalizes it.</p>
-                </div>
-            </details>
-        </div>
-
-        <!-- Step 5: Normalized Profile -->
-        <div class="card">
-            <h2>Step 5 — Normalized Profile</h2>
-            <p>Your app mapped the provider-specific response into a standard shape:</p>
-
-            <div class="profile-result">
-                {% if debug.user_avatar %}
-                <img src="{{ debug.user_avatar }}" alt="{{ debug.user_name }}" class="avatar avatar-large">
-                {% endif %}
-
-                <table class="data-table">
+                <p class="section-label">Query parameters</p>
+                <table class="param-table">
+                    {% for key, value in debug.authorize_params.items() %}
                     <tr>
-                        <td class="label">Provider</td>
-                        <td>{{ debug.provider | capitalize }}</td>
+                        <td class="param-key">{{ key }}</td>
+                        <td class="param-value">{{ value }}</td>
                     </tr>
-                    <tr>
-                        <td class="label">ID</td>
-                        <td><code>{{ debug.user_id }}</code></td>
-                    </tr>
-                    <tr>
-                        <td class="label">Name</td>
-                        <td>{{ debug.user_name }}</td>
-                    </tr>
-                    <tr>
-                        <td class="label">Email</td>
-                        <td>{{ debug.user_email or "Not provided" }}</td>
-                    </tr>
-                    {% if debug.user_avatar %}
-                    <tr>
-                        <td class="label">Avatar</td>
-                        <td class="url-cell"><code>{{ debug.user_avatar }}</code></td>
-                    </tr>
-                    {% endif %}
+                    {% endfor %}
                 </table>
-            </div>
 
-            <details class="explainer">
-                <summary>What just happened?</summary>
-                <div class="explainer-content">
-                    <p>Every provider returns user data differently. GitHub uses <code>login</code> and <code>avatar_url</code>. Google uses <code>name</code> and <code>picture</code>.</p>
-                    <p>The <code>normalize_userinfo()</code> method maps provider-specific fields into a standard shape: <code>id</code>, <code>name</code>, <code>email</code>, <code>avatar</code>. This abstraction lets your app work with any provider without changing the rest of your code.</p>
+                <div class="channel-note">
+                    <span>This hop is a plain browser redirect. Everything above was visible in the
+                    address bar — which is exactly why no secret appears in it.</span>
                 </div>
-            </details>
+
+                <details class="explainer">
+                    <summary>What each parameter does</summary>
+                    <div class="explainer-content">
+                        <p><code>client_id</code> identifies your application. You got it when you registered with the provider. It is public.</p>
+                        <p><code>redirect_uri</code> is where the provider sends the user back. It must match what you registered, exactly.</p>
+                        <p><code>scope</code> is the permissions you are asking for. The user sees these on the consent screen.</p>
+                        <p><code>state</code> is a random token for CSRF protection. Your app stores it and checks it on the way back.</p>
+                        <p><code>response_type=code</code> selects the Authorization Code flow — the right choice for server-side apps.</p>
+                        {% if debug.authorize_params.get("code_challenge") %}
+                        <p><code>code_challenge</code> is the SHA-256 hash of a secret your app just generated. The provider stores it and, in step 3, demands the original. That is PKCE.</p>
+                        {% endif %}
+                    </div>
+                </details>
+            </section>
+
+            <!-- ============ Step 2 ============ -->
+            <section class="step-panel card" data-step="2" id="step-2" role="tabpanel">
+                <div class="step-head">
+                    <h2>Callback received</h2>
+                    <span class="badge">Front channel</span>
+                </div>
+                <p>The provider redirected the browser back to your app with two values.</p>
+
+                <table class="param-table">
+                    <tr>
+                        <td class="param-key">code</td>
+                        <td class="param-value">{{ debug.callback_code }}</td>
+                    </tr>
+                    <tr>
+                        <td class="param-key">state</td>
+                        <td class="param-value">{{ debug.callback_state }}<span class="verified-badge">verified</span></td>
+                    </tr>
+                </table>
+
+                <div class="channel-note">
+                    <span>The <code>code</code> travelled through the browser, so treat it as public.
+                    It is useless on its own — redeeming it takes your client secret, which never left your server.</span>
+                </div>
+
+                <details class="explainer">
+                    <summary>Why the state check matters</summary>
+                    <div class="explainer-content">
+                        <p>The <code>code</code> is short-lived and single-use. It is <em>not</em> an access token.</p>
+                        <p>The <code>state</code> must match what your app sent in step 1 — and it must match a value tied to <em>this browser</em>, not merely one the server issued to someone.</p>
+                        <p>If you only check that the state exists server-side, an attacker can start their own login, capture a valid state, and hand the callback URL to a victim. The victim's browser redeems it and they end up signed into the attacker's account. That is login CSRF.</p>
+                        <p>This app binds the state to a cookie set at login, so a state from another browser is rejected.</p>
+                    </div>
+                </details>
+            </section>
+
+            <!-- ============ Step 3 ============ -->
+            <section class="step-panel card" data-step="3" id="step-3" role="tabpanel">
+                <div class="step-head">
+                    <h2>Token exchange</h2>
+                    <span class="badge badge-success">Back channel</span>
+                    {% if debug.token_ms %}<span class="timing">{{ debug.token_ms }} ms</span>{% endif %}
+                </div>
+                <p>Your server called the provider directly. The browser was not involved.</p>
+
+                <div class="http-request">
+                    <span class="http-method">POST</span>
+                    <span class="http-url">{{ debug.token_request_url }}</span>
+                </div>
+
+                <p class="section-label">Request body</p>
+                <div class="code-block">{% for key, value in debug.token_request_body.items() %}{{ key }}: {{ value }}
+{% endfor %}</div>
+
+                <p class="section-label">Response</p>
+                <div class="code-block">{% for key, value in debug.token_response_raw.items() %}{{ key }}: {{ value }}
+{% endfor %}</div>
+
+                <div class="channel-note is-backchannel">
+                    <span>This is the one hop the user cannot see or tamper with. That is why the
+                    <code>client_secret</code> can safely appear in the body above — it goes server to
+                    server and never touches the browser.</span>
+                </div>
+
+                <details class="explainer">
+                    <summary>What just happened</summary>
+                    <div class="explainer-content">
+                        <p>Your app posted the <code>code</code> from step 2 together with proof of its own identity, and got back an <code>access_token</code>.</p>
+                        <p>The code is now spent. Replaying it fails — providers reject a second exchange.</p>
+                        {% if debug.token_request_body.get("code_verifier") %}
+                        <p>Both <code>client_secret</code> and <code>code_verifier</code> are present. That is correct for a web app: PKCE is an <em>extra</em> proof, not a replacement for the secret. Only public clients — mobile apps and SPAs, which cannot keep a secret — omit it.</p>
+                        {% endif %}
+                        <p>The <code>access_token</code> is what your app now uses to call the provider's API on the user's behalf.</p>
+                    </div>
+                </details>
+            </section>
+
+            <!-- ============ Step 4 ============ -->
+            <section class="step-panel card" data-step="4" id="step-4" role="tabpanel">
+                <div class="step-head">
+                    <h2>Fetch user info</h2>
+                    <span class="badge badge-success">Back channel</span>
+                    {% if debug.userinfo_ms %}<span class="timing">{{ debug.userinfo_ms }} ms</span>{% endif %}
+                </div>
+                <p>Your app used the access token to call the provider's API.</p>
+
+                <div class="http-request">
+                    <span class="http-method">GET</span>
+                    <span class="http-url">{{ debug.userinfo_request_url }}</span>
+                </div>
+
+                <p class="section-label">Request headers</p>
+                <table class="param-table">
+                    {% for key, value in debug.userinfo_request_headers.items() %}
+                    <tr>
+                        <td class="param-key">{{ key }}</td>
+                        <td class="param-value">{{ value }}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+
+                <p class="section-label">Raw response</p>
+                <div class="code-block">{{ debug.userinfo_response_raw | tojson(indent=2) }}</div>
+
+                <details class="explainer">
+                    <summary>What just happened</summary>
+                    <div class="explainer-content">
+                        <p>The token goes in an <code>Authorization</code> header with the <code>Bearer</code> prefix. Anyone holding this token can make this same call, which is why it never goes near the browser.</p>
+                        <p>Look at the field names in the response. They are specific to this provider — every provider invents its own shape, which is what the next step exists to fix.</p>
+                    </div>
+                </details>
+            </section>
+
+            <!-- ============ Step 5 ============ -->
+            <section class="step-panel card" data-step="5" id="step-5" role="tabpanel">
+                <div class="step-head">
+                    <h2>Normalized profile</h2>
+                    <span class="badge">Your code</span>
+                </div>
+                <p>Your app mapped the provider's response into one shape, then created a session.</p>
+
+                <div class="profile-result">
+                    {% if debug.user_avatar %}
+                    <img src="{{ debug.user_avatar }}" alt="" class="avatar avatar-large">
+                    {% endif %}
+
+                    <table class="data-table">
+                        <tr><td class="label">provider</td><td class="param-value">{{ debug.provider }}</td></tr>
+                        <tr><td class="label">id</td><td class="param-value">{{ debug.user_id }}</td></tr>
+                        <tr><td class="label">name</td><td class="param-value">{{ debug.user_name }}</td></tr>
+                        <tr><td class="label">email</td><td class="param-value">{{ debug.user_email or "null" }}</td></tr>
+                        {% if debug.user_avatar %}
+                        <tr><td class="label">avatar</td><td class="param-value url-cell">{{ debug.user_avatar }}</td></tr>
+                        {% endif %}
+                    </table>
+                </div>
+
+                <div class="channel-note">
+                    <span>The session cookie is set here — <code>HttpOnly</code>, so JavaScript cannot read
+                    it, and bound to a server-side record that expires on its own.</span>
+                </div>
+
+                <details class="explainer">
+                    <summary>Why normalize at all</summary>
+                    <div class="explainer-content">
+                        <p>GitHub sends <code>login</code> and <code>avatar_url</code>. Google sends <code>name</code> and <code>picture</code>. The demo provider sends <code>display_name</code> and <code>email_address</code>.</p>
+                        <p><code>normalize_userinfo()</code> maps all of them onto <code>id</code>, <code>name</code>, <code>email</code>, <code>avatar</code>, so the rest of your app never has to care which provider signed the user in.</p>
+                        <p>One more thing worth knowing: these values are attacker-controlled. A display name can contain HTML. Escape it before rendering, exactly as you would a form field.</p>
+                    </div>
+                </details>
+            </section>
+
+            <div class="step-nav">
+                <button class="btn btn-outline btn-sm" data-step-prev>&larr; Previous</button>
+                <span class="step-nav-count" data-step-count>1 / 5</span>
+                <button class="btn btn-primary btn-sm" data-step-next>Next hop &rarr;</button>
+            </div>
         </div>
 
-        <!-- Actions -->
-        <div class="actions" style="justify-content: center; gap: 0.5rem;">
-            <a href="/profile" class="btn btn-primary">View Profile</a>
-            <a href="/" class="btn btn-outline">Home</a>
-            <a href="/auth/logout" class="btn btn-outline">Logout</a>
+        <div class="actions" style="justify-content: center;">
+            <button class="btn btn-outline btn-sm" data-step-goto="1">Replay from step 1</button>
+            <a href="/profile" class="btn btn-outline btn-sm">Profile</a>
+            <a href="/" class="btn btn-outline btn-sm">Home</a>
+            <a href="/auth/logout" class="btn btn-outline btn-sm">Sign out</a>
         </div>
 
         <footer>
@@ -194,7 +256,12 @@
                 &nbsp;&middot;&nbsp;
                 <a href="https://github.com/pranavkumaarofficial/oauth-for-dummies/blob/main/docs/tutorial.md">Tutorial</a>
             </p>
+            <p class="tertiary" style="margin-top:0.5rem;font-size:0.75rem;">
+                Use &larr; &rarr; or press 1&ndash;5 to move between steps.
+            </p>
         </footer>
     </div>
+
+    <script src="/static/learn.js"></script>
 </body>
 </html>

@@ -8,6 +8,7 @@ No need to edit a config file or register anything manually.
 from __future__ import annotations
 
 from providers.base import OAuthProvider
+from providers.demo import DemoProvider
 from providers.github import GitHubProvider
 from providers.google import GoogleProvider
 from providers.discord import DiscordProvider
@@ -15,12 +16,21 @@ from providers.spotify import SpotifyProvider
 from providers.microsoft import MicrosoftProvider
 from providers.linkedin import LinkedInProvider
 from app.config import settings
+from app.demo_provider.routes import DEMO_CLIENT_ID, DEMO_CLIENT_SECRET
 
 
 # ---- Registry of all available providers ----
 # Add new providers here as you build them.
 
 _PROVIDER_CONFIGS: dict[str, dict] = {
+    # The demo provider runs inside this app, so it is always configured —
+    # no registration, no .env, nothing to set up. Its credentials are the
+    # fixed pair the built-in authorization server expects.
+    "demo": {
+        "class": DemoProvider,
+        "client_id": DEMO_CLIENT_ID,
+        "client_secret": DEMO_CLIENT_SECRET,
+    },
     "github": {
         "class": GitHubProvider,
         "client_id": settings.GITHUB_CLIENT_ID,
@@ -81,11 +91,27 @@ def get_provider(name: str) -> OAuthProvider:
         )
 
     redirect_uri = f"{settings.base_url}/auth/{name}/callback"
-    return config["class"](
+    provider = config["class"](
         client_id=config["client_id"],
         client_secret=config["client_secret"],
         redirect_uri=redirect_uri,
     )
+
+    # The demo provider's endpoints live in this same app, so they can only be
+    # resolved once we know the base URL.
+    #
+    # The authorize URL is browser-facing, so it uses the same host the user is
+    # on. The token and userinfo URLs are called by our own server, and there we
+    # dial 127.0.0.1 directly: resolving "localhost" costs a couple of seconds on
+    # Windows, which tries ::1 before falling back to IPv4. Same request, ~40x
+    # faster, and it keeps the demo's back-channel hops feeling instant.
+    if name == "demo":
+        loopback = f"http://127.0.0.1:{settings.PORT}"
+        provider.authorize_url = f"{settings.base_url}/demo-provider/authorize"
+        provider.token_url = f"{loopback}/demo-provider/token"
+        provider.userinfo_url = f"{loopback}/demo-provider/userinfo"
+
+    return provider
 
 
 def list_providers() -> list[dict]:

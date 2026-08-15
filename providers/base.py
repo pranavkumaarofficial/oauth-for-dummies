@@ -12,6 +12,7 @@ from __future__ import annotations
 import hashlib
 import base64
 import secrets
+import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Any
@@ -372,12 +373,14 @@ class OAuthProvider(ABC):
             print(f"  secret: {self.client_secret[:4]}{'*' * 12}")
         print(f"{'='*60}\n")
 
+        started = time.monotonic()
         async with httpx.AsyncClient() as client:
             response = await client.post(
                 self.token_url,
                 data=data,
                 headers={"Accept": "application/json"},
             )
+        elapsed_ms = int((time.monotonic() - started) * 1000)
 
         raw = self._parse_token_response(response)
 
@@ -420,6 +423,7 @@ class OAuthProvider(ABC):
             "request_url": self.token_url,
             "request_body": display_body,
             "response_raw": display_response,
+            "elapsed_ms": elapsed_ms,
         }
 
     async def get_userinfo_detailed(self, token: OAuthToken) -> dict:
@@ -431,6 +435,7 @@ class OAuthProvider(ABC):
         print(f"  Authorization: Bearer {token.access_token[:12]}...")
         print(f"{'='*60}\n")
 
+        started = time.monotonic()
         async with httpx.AsyncClient() as client:
             response = await client.get(
                 self.userinfo_url,
@@ -438,6 +443,7 @@ class OAuthProvider(ABC):
             )
             response.raise_for_status()
             raw = response.json()
+        elapsed_ms = int((time.monotonic() - started) * 1000)
 
         user = self.normalize_userinfo(raw)
         user.provider = self.name
@@ -455,4 +461,5 @@ class OAuthProvider(ABC):
                 "Authorization": f"Bearer {token.access_token[:12]}...",
             },
             "response_raw": raw,
+            "elapsed_ms": elapsed_ms,
         }

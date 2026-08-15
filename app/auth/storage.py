@@ -65,11 +65,13 @@ class DebugSession:
     token_response_raw: dict = field(default_factory=dict)
     token_type: str = ""
     token_scope: str = ""
+    token_ms: int = 0  # real round-trip time, so the network hop feels real
 
     # Step 4: User info fetch
     userinfo_request_url: str = ""
     userinfo_request_headers: dict = field(default_factory=dict)
     userinfo_response_raw: dict = field(default_factory=dict)
+    userinfo_ms: int = 0
 
     # Step 5: Normalized profile
     user_id: str = ""

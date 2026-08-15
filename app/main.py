@@ -17,6 +17,7 @@ from fastapi.templating import Jinja2Templates
 from app.config import settings
 from app.auth.routes import router as auth_router
 from app.learn.routes import router as learn_router
+from app.demo_provider.routes import router as demo_provider_router
 from app.auth.storage import store
 from providers.registry import list_providers
 
@@ -35,6 +36,7 @@ templates = Jinja2Templates(directory=BASE_DIR / "templates")
 # Register routes
 app.include_router(auth_router)
 app.include_router(learn_router)
+app.include_router(demo_provider_router)
 
 
 # ---- Pages ----
