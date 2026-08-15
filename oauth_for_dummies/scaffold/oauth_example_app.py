@@ -7,6 +7,8 @@ Open: http://localhost:8000
 Docs: https://github.com/pranavkumaarofficial/oauth-for-dummies
 """
 
+import html
+
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 
@@ -15,6 +17,18 @@ from oauth_routes import router as oauth_router, get_session
 
 app = FastAPI(title="My App")
 app.include_router(oauth_router)
+
+
+def esc(value) -> str:
+    """
+    Escape a value before putting it in HTML.
+
+    Names, emails and avatar URLs come from the OAuth provider, which means they
+    come from *the user of that provider* — someone can set their Discord or
+    GitHub display name to `<img src=x onerror=...>`. Provider data is untrusted
+    input, exactly like a form field. Always escape it.
+    """
+    return html.escape(str(value or ""), quote=True)
 
 STYLE = """
 <style>
@@ -91,7 +105,7 @@ async def home(request: Request):
 
     user_info = ""
     if user:
-        user_info = f'<p class="meta" style="margin-top:1rem;">Signed in as <strong>{user["name"]}</strong> — <a href="/profile">Profile</a> | <a href="/auth/logout">Sign out</a></p>'
+        user_info = f'<p class="meta" style="margin-top:1rem;">Signed in as <strong>{esc(user.get("name"))}</strong> — <a href="/profile">Profile</a> | <a href="/auth/logout">Sign out</a></p>'
 
     return LOGIN_PAGE.format(style=STYLE, buttons=buttons, user_info=user_info)
 
@@ -104,8 +118,8 @@ async def profile(request: Request):
 
     return PROFILE_PAGE.format(
         style=STYLE,
-        name=user.get("name", ""),
-        email=user.get("email", ""),
-        avatar=user.get("avatar", ""),
-        provider=user.get("provider", ""),
+        name=esc(user.get("name")),
+        email=esc(user.get("email")),
+        avatar=esc(user.get("avatar")),
+        provider=esc(user.get("provider")),
     )

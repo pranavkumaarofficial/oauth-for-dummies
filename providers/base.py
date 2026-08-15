@@ -20,6 +20,31 @@ from urllib.parse import urlencode
 import httpx
 
 
+class OAuthError(Exception):
+    """A provider rejected the request, or answered with something unusable."""
+
+
+# Human-readable explanations for the token errors people actually hit.
+FRIENDLY_TOKEN_ERRORS = {
+    "bad_verification_code": (
+        "The authorization code was invalid, expired, or already used. Codes are "
+        "single-use and short-lived — start the login again."
+    ),
+    "invalid_grant": (
+        "The provider rejected the authorization code. Usually the code expired, "
+        "was already used, or redirect_uri did not match the one used at login."
+    ),
+    "redirect_uri_mismatch": (
+        "redirect_uri did not match the one registered with the provider. It must "
+        "match exactly, including http vs https, port, and trailing slash."
+    ),
+    "invalid_client": (
+        "The provider rejected your client credentials. Check the client ID and "
+        "secret in your .env."
+    ),
+}
+
+
 @dataclass
 class OAuthToken:
     """Holds the token data returned by the provider."""
@@ -63,6 +88,11 @@ class OAuthProvider(ABC):
     icon: str = ""                  # Emoji or icon class for UI
     use_pkce: bool = False          # Set True for OAuth 2.1 / PKCE flow
 
+    # Public clients (mobile apps, SPAs) are registered without a client secret
+    # and rely on PKCE alone. Web apps are *confidential* clients: they must keep
+    # sending client_secret, and PKCE is an extra proof layered on top of it.
+    is_public_client: bool = False
+
     def __init__(self, client_id: str, client_secret: str, redirect_uri: str):
         self.client_id = client_id
         self.client_secret = client_secret
@@ -80,6 +110,64 @@ class OAuthProvider(ABC):
         """Create S256 code challenge from verifier."""
         digest = hashlib.sha256(verifier.encode("ascii")).digest()
         return base64.urlsafe_b64encode(digest).rstrip(b"=").decode("ascii")
+
+    # ---- Token request building & error handling ----
+
+    def _build_token_data(self, code: str, code_verifier: str | None) -> dict[str, str]:
+        """
+        Build the token exchange body.
+
+        PKCE does not replace the client secret for confidential clients — it is
+        sent *in addition to* it. Only public clients (no secret registered) omit
+        the secret. Getting this backwards makes the token request fail with 401
+        on GitHub, Google, Discord, Microsoft and LinkedIn.
+        """
+        data = {
+            "client_id": self.client_id,
+            "code": code,
+            "redirect_uri": self.redirect_uri,
+            "grant_type": "authorization_code",
+        }
+        if not self.is_public_client:
+            data["client_secret"] = self.client_secret
+        if code_verifier:
+            data["code_verifier"] = code_verifier
+        return data
+
+    def _parse_token_response(self, response: httpx.Response) -> dict:
+        """
+        Read a token response, raising a readable error instead of a KeyError.
+
+        Some providers (notably GitHub) return HTTP 200 with an error body, so
+        checking the status code alone is not enough.
+        """
+        try:
+            payload = response.json()
+        except ValueError:
+            raise OAuthError(
+                f"{self.display_name} returned a non-JSON token response "
+                f"(HTTP {response.status_code})."
+            )
+
+        if not isinstance(payload, dict):
+            raise OAuthError(f"{self.display_name} returned an unexpected token response.")
+
+        error = payload.get("error")
+        if error:
+            code = error if isinstance(error, str) else str(error)
+            description = payload.get("error_description") or FRIENDLY_TOKEN_ERRORS.get(code, "")
+            message = f"{self.display_name} rejected the token request ({code})."
+            raise OAuthError(f"{message} {description}".strip())
+
+        if response.status_code >= 400:
+            raise OAuthError(
+                f"{self.display_name} returned HTTP {response.status_code} for the token request."
+            )
+
+        if not payload.get("access_token"):
+            raise OAuthError(f"{self.display_name} did not return an access_token.")
+
+        return payload
 
     def get_authorization_url(self, state: str | None = None) -> tuple[str, str]:
         """
@@ -137,17 +225,7 @@ class OAuthProvider(ABC):
 
         If PKCE is enabled, pass code_verifier instead of using client_secret.
         """
-        data = {
-            "client_id": self.client_id,
-            "code": code,
-            "redirect_uri": self.redirect_uri,
-            "grant_type": "authorization_code",
-        }
-
-        if code_verifier or self.use_pkce:
-            data["code_verifier"] = code_verifier
-        else:
-            data["client_secret"] = self.client_secret
+        data = self._build_token_data(code, code_verifier)
 
         print(f"\n{'='*60}")
         print(f"  STEP 3 — Exchange code for token")
@@ -166,8 +244,8 @@ class OAuthProvider(ABC):
                 data=data,
                 headers={"Accept": "application/json"},
             )
-            response.raise_for_status()
-            raw = response.json()
+
+        raw = self._parse_token_response(response)
 
         token = OAuthToken(
             access_token=raw["access_token"],
@@ -281,17 +359,7 @@ class OAuthProvider(ABC):
 
     async def exchange_code_for_token_detailed(self, code: str, code_verifier: str | None = None) -> dict:
         """Like exchange_code_for_token, but captures request/response data."""
-        data = {
-            "client_id": self.client_id,
-            "code": code,
-            "redirect_uri": self.redirect_uri,
-            "grant_type": "authorization_code",
-        }
-
-        if code_verifier or self.use_pkce:
-            data["code_verifier"] = code_verifier
-        else:
-            data["client_secret"] = self.client_secret
+        data = self._build_token_data(code, code_verifier)
 
         print(f"\n{'='*60}")
         print(f"  STEP 3 — Exchange code for token")
@@ -310,8 +378,8 @@ class OAuthProvider(ABC):
                 data=data,
                 headers={"Accept": "application/json"},
             )
-            response.raise_for_status()
-            raw = response.json()
+
+        raw = self._parse_token_response(response)
 
         token = OAuthToken(
             access_token=raw["access_token"],
@@ -326,17 +394,18 @@ class OAuthProvider(ABC):
         print(f"  Token type: {token.token_type}")
         print(f"  Scope: {token.scope}\n")
 
-        # Redacted versions for UI display
-        display_body = {
-            "client_id": self.client_id[:8] + "...",
-            "code": code[:16] + "...",
-            "redirect_uri": self.redirect_uri,
-            "grant_type": "authorization_code",
+        # Redacted versions for UI display. Built from the request we actually
+        # sent, so the debugger can never disagree with reality.
+        _redactions = {
+            "client_id": lambda v: v[:8] + "...",
+            "code": lambda v: v[:16] + "...",
+            "client_secret": lambda v: v[:4] + "************",
+            "code_verifier": lambda v: v[:16] + "...",
         }
-        if code_verifier:
-            display_body["code_verifier"] = code_verifier[:16] + "..."
-        else:
-            display_body["client_secret"] = self.client_secret[:4] + "************"
+        display_body = {
+            key: _redactions[key](value) if key in _redactions else value
+            for key, value in data.items()
+        }
 
         display_response = {
             "access_token": token.access_token[:12] + "...",

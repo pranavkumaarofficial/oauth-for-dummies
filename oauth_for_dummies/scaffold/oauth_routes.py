@@ -30,8 +30,21 @@ _pending_states: dict[str, str] = {}
 _code_verifiers: dict[str, str] = {}  # PKCE: state -> code_verifier
 _sessions: dict[str, dict] = {}
 
-# Providers that support/require PKCE (add provider keys here to enable)
+# The state token is ALSO stored in this cookie, so we can prove that the browser
+# finishing the flow is the same one that started it. Without this, anyone who
+# obtains a valid state can have it redeemed by someone else's browser — that's
+# login CSRF, and it lets an attacker log a victim into the attacker's account.
+STATE_COOKIE = "oauth_state"
+STATE_COOKIE_MAX_AGE = 600  # 10 minutes to complete a login
+
+# Providers that support/require PKCE (add provider keys here to enable).
+# NOTE: PKCE is sent *in addition to* client_secret. It does not replace it.
 PKCE_PROVIDERS: set[str] = set()
+
+# Providers registered as *public* clients (mobile/SPA style — no client secret).
+# Only these skip client_secret at the token endpoint. Most web apps are
+# confidential clients and must keep sending the secret, even with PKCE enabled.
+PUBLIC_CLIENTS: set[str] = set()
 
 
 # ---- PKCE helpers ----
@@ -43,6 +56,71 @@ def _generate_code_verifier() -> str:
 def _generate_code_challenge(verifier: str) -> str:
     digest = hashlib.sha256(verifier.encode("ascii")).digest()
     return base64.urlsafe_b64encode(digest).rstrip(b"=").decode("ascii")
+
+
+# ---- Token error handling ----
+
+# Some providers (notably GitHub) return HTTP 200 with an error body instead of
+# a 4xx, so checking the status code alone is not enough.
+_FRIENDLY_ERRORS = {
+    "bad_verification_code": (
+        "The authorization code was invalid, expired, or already used. "
+        "Authorization codes are single-use and short-lived — start the login again."
+    ),
+    "invalid_grant": (
+        "The provider rejected the authorization code. It usually means the code "
+        "expired, was already used, or redirect_uri did not match the one used at login."
+    ),
+    "redirect_uri_mismatch": (
+        "redirect_uri did not match the one registered with the provider. It must "
+        "match exactly, including http vs https, port, and trailing slash."
+    ),
+    "invalid_client": (
+        "The provider rejected your client credentials. Check client_id and "
+        "client_secret in your .env."
+    ),
+}
+
+
+def _extract_token(provider: str, response: httpx.Response) -> str:
+    """Pull the access token out of a token response, or raise a useful error."""
+    try:
+        payload = response.json()
+    except ValueError:
+        raise HTTPException(
+            status_code=502,
+            detail=f"{provider} returned a non-JSON token response (HTTP {response.status_code}).",
+        )
+
+    if not isinstance(payload, dict):
+        raise HTTPException(
+            status_code=502,
+            detail=f"{provider} returned an unexpected token response.",
+        )
+
+    error = payload.get("error")
+    if error:
+        # error can be a string or, on some providers, a nested object
+        code = error if isinstance(error, str) else str(error)
+        description = payload.get("error_description") or _FRIENDLY_ERRORS.get(code, "")
+        message = f"{provider} rejected the token request ({code})."
+        if description:
+            message = f"{message} {description}"
+        raise HTTPException(status_code=400, detail=message)
+
+    if response.status_code >= 400:
+        raise HTTPException(
+            status_code=400,
+            detail=f"{provider} returned HTTP {response.status_code} for the token request.",
+        )
+
+    token = payload.get("access_token")
+    if not token:
+        raise HTTPException(
+            status_code=502,
+            detail=f"{provider} did not return an access_token.",
+        )
+    return token
 
 
 # ---- User info normalizers ----
@@ -166,15 +244,41 @@ async def login(provider: str):
         params["code_challenge"] = _generate_code_challenge(verifier)
         params["code_challenge_method"] = "S256"
 
-    return RedirectResponse(f"{config['authorize_url']}?{urlencode(params)}")
+    response = RedirectResponse(f"{config['authorize_url']}?{urlencode(params)}")
+    # Bind the state to THIS browser. The callback requires the cookie to match
+    # the state in the query string, so a state captured by an attacker cannot
+    # be redeemed in a victim's browser.
+    response.set_cookie(
+        key=STATE_COOKIE,
+        value=state,
+        httponly=True,
+        max_age=STATE_COOKIE_MAX_AGE,
+        samesite="lax",
+        path="/auth",
+    )
+    return response
 
 
 @router.get("/{provider}/callback")
-async def callback(provider: str, code: str = "", state: str = ""):
+async def callback(request: Request, provider: str, code: str = "", state: str = ""):
     """Handle the OAuth callback — exchange code for token, fetch user info."""
+    # ---- Verify state (CSRF protection) ----
+    # Two checks, and both matter:
+    #   1. the state must match the cookie we set at /login  (same browser)
+    #   2. the state must be one we actually issued          (not forged)
+    cookie_state = request.cookies.get(STATE_COOKIE)
+    if not state or not cookie_state or not secrets.compare_digest(cookie_state, state):
+        raise HTTPException(
+            status_code=400,
+            detail="State did not match this browser's login attempt. Try logging in again.",
+        )
+
     saved_provider = _pending_states.pop(state, None)
     if saved_provider is None or saved_provider != provider:
+        _code_verifiers.pop(state, None)
         raise HTTPException(status_code=400, detail="Invalid state. Try logging in again.")
+
+    code_verifier = _code_verifiers.pop(state, None)
 
     if not code:
         raise HTTPException(status_code=400, detail="No authorization code received.")
@@ -191,12 +295,15 @@ async def callback(provider: str, code: str = "", state: str = ""):
         "grant_type": "authorization_code",
     }
 
-    # PKCE: send code_verifier instead of client_secret
-    code_verifier = _code_verifiers.pop(state, None)
+    # Confidential clients (most web apps) must send client_secret. PKCE is an
+    # *extra* proof on top of it, not a replacement — only genuinely public
+    # clients registered without a secret may omit it.
+    if provider not in PUBLIC_CLIENTS:
+        token_data["client_secret"] = config["client_secret"]
+
+    # PKCE: prove we are the same client that started the flow
     if code_verifier:
         token_data["code_verifier"] = code_verifier
-    else:
-        token_data["client_secret"] = config["client_secret"]
 
     # Exchange code for access token
     async with httpx.AsyncClient() as client:
@@ -205,10 +312,8 @@ async def callback(provider: str, code: str = "", state: str = ""):
             data=token_data,
             headers={"Accept": "application/json"},
         )
-        token_resp.raise_for_status()
-        token_json = token_resp.json()
 
-    access_token = token_json["access_token"]
+    access_token = _extract_token(provider, token_resp)
 
     # Fetch user info
     async with httpx.AsyncClient() as client:
@@ -216,7 +321,11 @@ async def callback(provider: str, code: str = "", state: str = ""):
             config["userinfo_url"],
             headers={"Authorization": f"Bearer {access_token}"},
         )
-        user_resp.raise_for_status()
+        if user_resp.status_code >= 400:
+            raise HTTPException(
+                status_code=400,
+                detail=f"{provider} returned HTTP {user_resp.status_code} when fetching your profile.",
+            )
         raw_user = user_resp.json()
 
     # Normalize user data
@@ -234,6 +343,8 @@ async def callback(provider: str, code: str = "", state: str = ""):
         max_age=3600,
         samesite="lax",
     )
+    # The state cookie has done its job
+    response.delete_cookie(STATE_COOKIE, path="/auth")
     return response
 
 

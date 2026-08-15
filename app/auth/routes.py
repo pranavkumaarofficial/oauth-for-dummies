@@ -21,6 +21,27 @@ from app.auth.storage import store, StoredSession, DebugSession
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
+# The state token is also stored in this cookie so the callback can prove that
+# the browser finishing the flow is the same one that started it. Checking only
+# that the state exists server-side is NOT enough: an attacker who obtains a
+# valid state can have a victim's browser redeem it, which logs the victim into
+# the attacker's account (login CSRF, RFC 6749 §10.12).
+STATE_COOKIE = "oauth_state"
+STATE_COOKIE_MAX_AGE = 600  # 10 minutes to complete a login
+
+
+def _set_state_cookie(response, state: str):
+    """Bind the pending OAuth state to this browser."""
+    response.set_cookie(
+        key=STATE_COOKIE,
+        value=state,
+        httponly=True,
+        max_age=STATE_COOKIE_MAX_AGE,
+        samesite="lax",
+        path="/",
+    )
+    return response
+
 
 @router.get("/{provider_name}/login")
 async def login(provider_name: str, request: Request, mode: str = "quick"):
@@ -46,9 +67,12 @@ async def login(provider_name: str, request: Request, mode: str = "quick"):
         store.save_state(state, provider_name, mode="learn", code_verifier=code_verifier)
         store.save_learn_preflight(state, details)
         print(f"\n  Learn mode: showing pre-flight for {provider.display_name}...\n")
-        return RedirectResponse(
-            url=f"/learn/{provider_name}/start?state={state}",
-            status_code=303,
+        return _set_state_cookie(
+            RedirectResponse(
+                url=f"/learn/{provider_name}/start?state={state}",
+                status_code=303,
+            ),
+            state,
         )
     else:
         result = provider.get_authorization_url()
@@ -59,7 +83,7 @@ async def login(provider_name: str, request: Request, mode: str = "quick"):
             code_verifier = None
         store.save_state(state, provider_name, code_verifier=code_verifier)
         print(f"\n  Redirecting user to {provider.display_name}...\n")
-        return RedirectResponse(url=auth_url)
+        return _set_state_cookie(RedirectResponse(url=auth_url), state)
 
 
 @router.get("/{provider_name}/callback")
@@ -78,6 +102,21 @@ async def callback(provider_name: str, request: Request, code: str = "", state: 
     5. Creates a session and redirects to the profile page
     """
     # ---- Verify state (CSRF protection) ----
+    # Check 1: does the state match the cookie we set when this browser started
+    # the flow? This is what stops an attacker's captured state from being
+    # redeemed in someone else's browser.
+    cookie_state = request.cookies.get(STATE_COOKIE)
+    if not state or not cookie_state or not secrets.compare_digest(cookie_state, state):
+        print("  CSRF check failed! State does not match this browser's login attempt.")
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "State did not match this browser's login attempt. "
+                "This could be a CSRF attack. Try logging in again."
+            ),
+        )
+
+    # Check 2: is it a state we actually issued?
     saved_provider = store.verify_state(state)
     if saved_provider is None:
         print("  CSRF check failed! Unknown state token.")
@@ -159,6 +198,7 @@ async def _handle_quick_callback(provider, provider_name: str, code: str, code_v
         max_age=3600,
         samesite="lax",
     )
+    response.delete_cookie(STATE_COOKIE, path="/")
     return response
 
 
@@ -237,6 +277,7 @@ async def _handle_learn_callback(provider, provider_name: str, code: str, state:
         max_age=3600,
         samesite="lax",
     )
+    response.delete_cookie(STATE_COOKIE, path="/")
     return response
 
 

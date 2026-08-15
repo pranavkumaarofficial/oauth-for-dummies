@@ -19,3 +19,6 @@ build/
 # OS
 .DS_Store
 Thumbs.db
+
+# Working notes (private planning, not part of the published project)
+notes/
