@@ -22,6 +22,18 @@ class LinkedInProvider(OAuthProvider):
     userinfo_url = "https://api.linkedin.com/v2/userinfo"
     default_scopes = ["openid", "profile", "email"]
 
+    setup_url = "https://www.linkedin.com/developers/apps"
+    setup_steps = [
+        "Create app. LinkedIn requires an associated company page.",
+        "Open the Products tab and request Sign In with LinkedIn using OpenID Connect.",
+        "In the Auth tab, add the callback URL below under Authorized redirect URLs.",
+        "Copy the Client ID and Client Secret into your .env.",
+    ]
+    gotcha = (
+        "The openid, profile and email scopes only work once the Sign In with LinkedIn "
+        "product is approved on the Products tab. Without it every request fails on scope."
+    )
+
     def normalize_userinfo(self, raw: dict[str, Any]) -> UserInfo:
         """
         LinkedIn OIDC returns: {sub, name, email, picture, ...}

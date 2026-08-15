@@ -28,6 +28,19 @@ class GoogleProvider(OAuthProvider):
         "https://www.googleapis.com/auth/userinfo.profile",
     ]
 
+    setup_url = "https://console.cloud.google.com/apis/credentials"
+    setup_steps = [
+        "Create or pick a project, then open APIs and Services, Credentials.",
+        "Configure the OAuth consent screen first. Google will not let you skip it.",
+        "Create Credentials, OAuth client ID, Web application.",
+        "Add the callback URL below under Authorized redirect URIs.",
+        "Copy the Client ID and Client secret into your .env.",
+    ]
+    gotcha = (
+        "While the consent screen is in Testing mode, only accounts listed under Test users "
+        "can sign in. Everyone else gets access_denied. Add your own address there first."
+    )
+
     def normalize_userinfo(self, raw: dict[str, Any]) -> UserInfo:
         """
         Google returns: {id, email, verified_email, name, picture, ...}

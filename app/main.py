@@ -19,7 +19,7 @@ from app.auth.routes import router as auth_router
 from app.learn.routes import router as learn_router
 from app.demo_provider.routes import router as demo_provider_router
 from app.auth.storage import store
-from providers.registry import list_providers
+from providers.registry import list_providers, describe_providers
 
 # ---- App setup ----
 app = FastAPI(
@@ -63,6 +63,41 @@ async def home(request: Request):
             "request": request,
             "providers": providers,
             "user": user,
+            "app_name": settings.APP_NAME,
+        },
+    )
+
+
+@app.get("/settings", response_class=HTMLResponse)
+async def settings_page(request: Request):
+    """
+    Setup notes for every provider, with the exact values this app will use.
+
+    Read-only on purpose. Rendering the callback URL and env var names beats
+    copying them out of a README, because they are derived from the running
+    configuration and cannot drift out of date.
+    """
+    providers = describe_providers()
+    real = [p for p in providers if not p["is_demo"]]
+
+    # A .env block covering whatever is still unconfigured, ready to paste.
+    missing = [p for p in real if not p["configured"]]
+    env_lines = []
+    for p in missing:
+        env_lines.append(f'{p["env_id"]}=""')
+        env_lines.append(f'{p["env_secret"]}=""')
+
+    return templates.TemplateResponse(
+        "settings.html",
+        {
+            "request": request,
+            "providers": real,
+            "demo": next((p for p in providers if p["is_demo"]), None),
+            "env_snippet": "\n".join(env_lines),
+            "configured_count": sum(1 for p in real if p["configured"]),
+            "total_count": len(real),
+            "base_url": settings.base_url,
+            "cookie_secure": settings.COOKIE_SECURE,
             "app_name": settings.APP_NAME,
         },
     )

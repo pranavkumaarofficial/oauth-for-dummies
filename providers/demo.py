@@ -29,6 +29,13 @@ class DemoProvider(OAuthProvider):
     )
     default_scopes = ["profile", "email"]
     use_pkce = True
+    setup_url = ""
+    setup_steps = []
+    gotcha = (
+        "Nothing to configure. This provider runs inside the app, so it works on a clean "
+        "clone with no .env at all."
+    )
+
 
     # Filled in by the registry, which knows the app's base URL.
     authorize_url = ""

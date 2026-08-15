@@ -22,6 +22,18 @@ class DiscordProvider(OAuthProvider):
     userinfo_url = "https://discord.com/api/users/@me"
     default_scopes = ["identify", "email"]
 
+    setup_url = "https://discord.com/developers/applications"
+    setup_steps = [
+        "New Application, give it a name, then open the OAuth2 tab.",
+        "Under Redirects, add the callback URL below and save.",
+        "Copy the Client ID, then Reset Secret to reveal a client secret.",
+        "Put both into your .env.",
+    ]
+    gotcha = (
+        "Discord will not issue a token unless the redirect you send matches one saved in the "
+        "Redirects list exactly, trailing slash included. Save the page after adding it."
+    )
+
     def normalize_userinfo(self, raw: dict[str, Any]) -> UserInfo:
         """
         Discord returns: {id, username, discriminator, avatar, email, ...}

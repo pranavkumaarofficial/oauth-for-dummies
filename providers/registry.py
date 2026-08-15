@@ -114,6 +114,38 @@ def get_provider(name: str) -> OAuthProvider:
     return provider
 
 
+def describe_providers() -> list[dict]:
+    """
+    Everything the Settings page needs to explain how to configure a provider.
+
+    The callback URL is built from the app's own base URL rather than hardcoded,
+    because a redirect_uri that does not match the one you registered is the
+    single most common way an OAuth setup fails. Showing the exact string the
+    app will send removes the guesswork.
+    """
+    result = []
+    for name, config in _PROVIDER_CONFIGS.items():
+        cls = config["class"]
+        configured = bool(config["client_id"] and config["client_secret"])
+
+        result.append({
+            "name": name,
+            "display_name": cls.display_name,
+            "icon": cls.icon,
+            "configured": configured,
+            "is_demo": name == "demo",
+            "scopes": cls.default_scopes,
+            "uses_pkce": cls.use_pkce,
+            "setup_url": cls.setup_url,
+            "setup_steps": cls.setup_steps,
+            "gotcha": cls.gotcha,
+            "callback_url": f"{settings.base_url}/auth/{name}/callback",
+            "env_id": f"{name.upper()}_CLIENT_ID",
+            "env_secret": f"{name.upper()}_CLIENT_SECRET",
+        })
+    return result
+
+
 def list_providers() -> list[dict]:
     """
     List all providers and whether they're configured.

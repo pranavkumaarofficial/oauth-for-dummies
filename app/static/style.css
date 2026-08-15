@@ -214,6 +214,8 @@ a:hover { text-decoration: underline; }
 .wordmark:hover { text-decoration: none; }
 .topbar-spacer { flex: 1; }
 
+.topbar-nav { display: flex; gap: var(--s-md); margin-left: var(--s-xs); }
+
 .nav-link {
     font-size: 14px;
     font-weight: 500;

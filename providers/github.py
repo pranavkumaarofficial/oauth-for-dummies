@@ -23,6 +23,20 @@ class GitHubProvider(OAuthProvider):
     userinfo_url = "https://api.github.com/user"
     default_scopes = ["read:user", "user:email"]
 
+    setup_url = "https://github.com/settings/developers"
+    setup_steps = [
+        "Open Settings, Developer settings, OAuth Apps, then New OAuth App.",
+        "Put anything in Application name and Homepage URL.",
+        "Paste the callback URL below into Authorization callback URL.",
+        "Register the application, then Generate a new client secret.",
+        "Copy the Client ID and the secret into your .env.",
+    ]
+    gotcha = (
+        "GitHub shows the client secret exactly once. Copy it before leaving the page. "
+        "It also hides your email unless it is public, which is why this provider makes a "
+        "second call to /user/emails."
+    )
+
     def normalize_userinfo(self, raw: dict[str, Any]) -> UserInfo:
         """
         GitHub returns: {login, id, name, email, avatar_url, ...}

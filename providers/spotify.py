@@ -22,6 +22,18 @@ class SpotifyProvider(OAuthProvider):
     userinfo_url = "https://api.spotify.com/v1/me"
     default_scopes = ["user-read-email", "user-read-private"]
 
+    setup_url = "https://developer.spotify.com/dashboard"
+    setup_steps = [
+        "Create app, fill in a name and description.",
+        "Add the callback URL below under Redirect URIs.",
+        "Tick Web API, then save.",
+        "Open Settings to copy the Client ID and Client secret into your .env.",
+    ]
+    gotcha = (
+        "New Spotify apps start in development mode, where only accounts you add under "
+        "User Management can log in. Add your own account before testing."
+    )
+
     def normalize_userinfo(self, raw: dict[str, Any]) -> UserInfo:
         """
         Spotify returns: {id, display_name, email, images, ...}

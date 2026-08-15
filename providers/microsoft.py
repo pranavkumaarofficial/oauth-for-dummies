@@ -22,6 +22,20 @@ class MicrosoftProvider(OAuthProvider):
     userinfo_url = "https://graph.microsoft.com/v1.0/me"
     default_scopes = ["openid", "email", "profile", "User.Read"]
 
+    setup_url = "https://portal.azure.com/#blade/Microsoft_AAD_RegisteredApps"
+    setup_steps = [
+        "App registrations, New registration.",
+        "Under Supported account types, pick the option that includes personal accounts "
+        "unless you only want your own tenant.",
+        "Set the Redirect URI platform to Web and paste the callback URL below.",
+        "Copy the Application (client) ID from Overview.",
+        "Certificates and secrets, New client secret, then copy the Value into your .env.",
+    ]
+    gotcha = (
+        "Copy the secret Value, not the Secret ID. They sit next to each other and the ID "
+        "looks plausible. The Value is only shown once."
+    )
+
     def normalize_userinfo(self, raw: dict[str, Any]) -> UserInfo:
         """
         Microsoft Graph returns: {id, displayName, mail, userPrincipalName, ...}

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="/static/learn.css">
+    <script src="/static/theme.js"></script>
+</head>
+<body>
+    {% include "_topbar.html" %}
+
+    <div class="container band-tight">
+        <div class="stack-s" style="margin-bottom: var(--s-lg);">
+            <p class="eyebrow">Settings</p>
+            <h1>Connect a provider</h1>
+            <p class="body-md muted" style="max-width: 62ch;">
+                Every value on this page comes from the running app, so the callback URLs are
+                the exact strings it will send. {{ configured_count }} of {{ total_count }}
+                providers configured.
+            </p>
+        </div>
+
+        <div class="card-chrome" style="margin-bottom: var(--s-lg);">
+            <span class="label">This app is running at</span>
+            <table class="kv">
+                <tr>
+                    <td class="k">base URL</td>
+                    <td class="v v-url">{{ base_url }}</td>
+                </tr>
+                <tr>
+                    <td class="k">COOKIE_SECURE</td>
+                    <td class="v {% if cookie_secure %}v-ok{% endif %}">{{ cookie_secure | lower }}</td>
+                </tr>
+            </table>
+            <p class="caption muted-soft" style="margin-top: var(--s-sm);">
+                Change the base URL with <code>HOST</code> and <code>PORT</code> in your
+                <code>.env</code>. Every callback URL below follows it automatically.
+                {% if not cookie_secure %}
+                Leave <code>COOKIE_SECURE</code> off while you are on http. Turning it on without
+                https stops the browser returning cookies, and logins fail with a state mismatch.
+                {% endif %}
+            </p>
+        </div>
+
+        {% if demo %}
+        <div class="callout" style="margin-bottom: var(--s-xl);">
+            <strong>Nothing to configure to get started.</strong>
+            {{ demo.gotcha }} <a href="/auth/demo/login?mode=learn">Run the demo flow</a>.
+        </div>
+        {% endif %}
+
+        {% for p in providers %}
+        <details class="card-chrome provider-setup" style="margin-bottom: var(--s-sm);" {% if not p.configured %}open{% endif %}>
+            <summary class="setup-summary">
+                <span class="provider-mark">{{ p.icon | safe }}</span>
+                <span class="provider-name">{{ p.display_name }}</span>
+                {% if p.configured %}
+                <span class="badge badge-success">configured</span>
+                {% else %}
+                <span class="badge">not configured</span>
+                {% endif %}
+                {% if p.uses_pkce %}<span class="badge badge-code">PKCE</span>{% endif %}
+                <span class="setup-chevron"></span>
+            </summary>
+
+            <div class="setup-body">
+                <span class="label">1. Register the app</span>
+                <p class="body-sm">
+                    <a href="{{ p.setup_url }}" target="_blank" rel="noopener">{{ p.setup_url }}</a>
+                </p>
+                <ol class="setup-steps">
+                    {% for step in p.setup_steps %}
+                    <li>{{ step }}</li>
+                    {% endfor %}
+                </ol>
+
+                <span class="label">2. Use this callback URL</span>
+                <div class="copy-row">
+                    <code class="copy-value">{{ p.callback_url }}</code>
+                    <button class="btn btn-secondary btn-sm" data-copy="{{ p.callback_url }}">Copy</button>
+                </div>
+                <p class="caption muted-soft" style="margin-top: var(--s-xs);">
+                    It has to match character for character. This is what the app sends.
+                </p>
+
+                <span class="label">3. Add the credentials to .env</span>
+                <div class="copy-row">
+                    <code class="copy-value">{{ p.env_id }}="..."
+{{ p.env_secret }}="..."</code>
+                    <button class="btn btn-secondary btn-sm"
+                            data-copy='{{ p.env_id }}=""
+{{ p.env_secret }}=""'>Copy</button>
+                </div>
+                <p class="caption muted-soft" style="margin-top: var(--s-xs);">
+                    Restart the app after editing <code>.env</code>. Values are read once at startup.
+                </p>
+
+                <span class="label">Scopes this app requests</span>
+                <table class="kv">
+                    {% for s in p.scopes %}
+                    <tr><td class="k">{{ s }}</td><td class="v"></td></tr>
+                    {% endfor %}
+                </table>
+
+                {% if p.gotcha %}
+                <div class="note">
+                    <strong>Watch out:</strong> {{ p.gotcha }}
+                </div>
+                {% endif %}
+
+                {% if p.configured %}
+                <div class="actions" style="margin-top: var(--s-md);">
+                    <a href="/auth/{{ p.name }}/login?mode=learn" class="btn btn-primary btn-sm">Test in Learn Mode</a>
+                </div>
+                {% endif %}
+            </div>
+        </details>
+        {% endfor %}
+
+        {% if env_snippet %}
+        <div class="card" style="margin-top: var(--s-lg);">
+            <h3 style="margin-bottom: var(--s-xs);">Everything still missing</h3>
+            <p class="body-sm muted" style="margin-bottom: var(--s-md);">
+                Paste this into <code>.env</code> and fill in whichever ones you want.
+            </p>
+            <div class="copy-row">
+                <code class="copy-value">{{ env_snippet }}</code>
+                <button class="btn btn-secondary btn-sm" data-copy="{{ env_snippet }}">Copy all</button>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="callout" style="margin-top: var(--s-lg);">
+            <strong>Why this page does not edit .env for you.</strong>
+            It would mean a form on an unauthenticated page that writes client secrets to disk and
+            reads them back. Anyone who could reach the app could take your credentials, which
+            matters the moment it is running anywhere but your laptop. Editing the file directly
+            keeps the secrets where only your machine can see them.
+        </div>
+    </div>
+
+    {% include "_footer.html" %}
+    <script src="/static/settings.js"></script>
+</body>
+</html>

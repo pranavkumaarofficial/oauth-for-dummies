@@ -89,6 +89,12 @@ class OAuthProvider(ABC):
     icon: str = ""                  # Emoji or icon class for UI
     use_pkce: bool = False          # Set True for OAuth 2.1 / PKCE flow
 
+    # ---- Setup notes, rendered on the Settings page ----
+    # Kept on the provider so a new provider file carries its own instructions.
+    setup_url: str = ""             # Where you register the application
+    setup_steps: list[str] = []     # What to click, in order
+    gotcha: str = ""                # The thing that catches people out
+
     # Public clients (mobile apps, SPAs) are registered without a client secret
     # and rely on PKCE alone. Web apps are *confidential* clients: they must keep
     # sending client_secret, and PKCE is an extra proof layered on top of it.
