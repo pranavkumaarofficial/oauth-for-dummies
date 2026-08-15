@@ -11,11 +11,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from oauth_for_dummies.cli import _protect_env_file
+from oauthlens.cli import _protect_env_file
 
 
 class TestProtectEnvFile:
-    """`oauth-init` must not drop a secrets file into an unprotected repo."""
+    """`oauthlens` must not drop a secrets file into an unprotected repo."""
 
     def test_creates_gitignore_when_missing(self, tmp_path: Path):
         message = _protect_env_file(tmp_path)

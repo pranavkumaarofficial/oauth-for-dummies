@@ -5,10 +5,10 @@ The OAuth 2.0 spec is 76 pages. Every tutorial I found used a different approach
 
 So I built a tool that does two things: drops working OAuth routes into any FastAPI project with one command, and shows you exactly what happens at every step of the flow.
 
-It's called oauth-for-dummies, and it's open source.
+It's called oauthlens, and it's open source.
 
-GitHub: https://github.com/pranavkumaarofficial/oauth-for-dummies
-PyPI: `pip install oauth-for-dummies`
+GitHub: https://github.com/pranavkumaarofficial/oauthlens
+PyPI: `pip install oauthlens`
 
 ---
 
@@ -41,7 +41,7 @@ So I built a tool that generates the code directly into your project. No runtime
 Install it:
 
 ```bash
-pip install oauth-for-dummies
+pip install oauthlens
 ```
 
 Run the CLI inside your FastAPI project:
@@ -125,8 +125,8 @@ Each step has an expandable explanation underneath. No JavaScript frameworks, ju
 To try it yourself:
 
 ```bash
-git clone https://github.com/pranavkumaarofficial/oauth-for-dummies.git
-cd oauth-for-dummies
+git clone https://github.com/pranavkumaarofficial/oauthlens.git
+cd oauthlens
 pip install -e .
 cp .env.example .env
 # Add at least one provider's credentials to .env
@@ -218,22 +218,22 @@ This is a good fit if you want OAuth working in your FastAPI app quickly, you wa
 
 It's not the right tool if you need 20+ providers, enterprise SSO with SAML, or a production auth system handling millions of sessions. For that, look at Authlib or a managed service like Auth0.
 
-I'm not trying to replace those. oauth-for-dummies fills the gap between "I have no idea how OAuth works" and "I need a production auth system." Most projects start in that gap. I know I did.
+I'm not trying to replace those. oauthlens fills the gap between "I have no idea how OAuth works" and "I need a production auth system." Most projects start in that gap. I know I did.
 
 ---
 
 ## Try it
 
 ```bash
-pip install oauth-for-dummies
+pip install oauthlens
 oauth-init
 ```
 
 Or clone the repo and run the tutorial app with the debugger:
 
 ```bash
-git clone https://github.com/pranavkumaarofficial/oauth-for-dummies.git
-cd oauth-for-dummies
+git clone https://github.com/pranavkumaarofficial/oauthlens.git
+cd oauthlens
 pip install -e .
 cp .env.example .env
 uvicorn app.main:app --reload
@@ -241,5 +241,5 @@ uvicorn app.main:app --reload
 
 MIT licensed. If you want to add a provider (Twitter/X, Apple, Facebook, Twitch) or help with Flask support, PRs are open.
 
-GitHub: https://github.com/pranavkumaarofficial/oauth-for-dummies
-PyPI: https://pypi.org/project/oauth-for-dummies/
+GitHub: https://github.com/pranavkumaarofficial/oauthlens
+PyPI: https://pypi.org/project/oauthlens/

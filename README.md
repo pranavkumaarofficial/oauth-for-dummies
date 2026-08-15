@@ -1,6 +1,6 @@
-# OAuth for Dummies
+# OAuthLens
 
-**Learn how OAuth 2.0 actually works by running it, then add OAuth login to your FastAPI app in one command.**
+**See what actually happens during an OAuth login. Then add OAuth to your FastAPI app in one command.**
 
 Most OAuth tutorials show you a diagram and some code. This one runs a real
 sign-in flow on your machine and shows you every HTTP request as it happens: the
@@ -8,7 +8,7 @@ authorization redirect, the callback, the token exchange, the profile call. Real
 requests, real responses, with your own credentials or with none at all.
 
 <p>
-  <a href="https://pypi.org/project/oauth-for-dummies/"><img src="https://img.shields.io/pypi/v/oauth-for-dummies?style=flat-square&logo=pypi&logoColor=white&label=PyPI" alt="oauth-for-dummies on PyPI"/></a>
+  <a href="https://pypi.org/project/oauthlens/"><img src="https://img.shields.io/pypi/v/oauthlens?style=flat-square&logo=pypi&logoColor=white&label=PyPI" alt="oauthlens on PyPI"/></a>
   <a href="https://www.python.org/"><img src="https://img.shields.io/badge/python-3.9+-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python 3.9 and above"/></a>
   <a href="https://fastapi.tiangolo.com/"><img src="https://img.shields.io/badge/FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white" alt="Built for FastAPI"/></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT License"/></a>
@@ -18,9 +18,12 @@ Two things live in this repo:
 
 1. **An OAuth debugger** you run locally. It walks the flow one hop at a time and
    explains what each request is doing and why.
-2. **A scaffolder.** `pip install oauth-for-dummies && oauth-init` drops working
-   OAuth routes into your FastAPI project. You own the code, there is no runtime
+2. **A scaffolder.** `pip install oauthlens && oauthlens` drops working OAuth
+   routes into your FastAPI project. You own the code, there is no runtime
    dependency, and you can read every line.
+
+> Previously published as `oauth-for-dummies`. Same project, renamed so it can
+> carry its own name. The old package and repository URL still resolve here.
 
 ---
 
@@ -29,8 +32,8 @@ Two things live in this repo:
 No signup, no OAuth app registration, no credentials.
 
 ```bash
-git clone https://github.com/pranavkumaarofficial/oauth-for-dummies.git
-cd oauth-for-dummies
+git clone https://github.com/pranavkumaarofficial/oauthlens.git
+cd oauthlens
 pip install -e .
 uvicorn app.main:app --reload
 ```
@@ -69,9 +72,9 @@ visible rather than theoretical.
 ## Add OAuth to your own app
 
 ```bash
-pip install oauth-for-dummies
+pip install oauthlens
 cd your-fastapi-project
-oauth-init
+oauthlens
 ```
 
 Then two lines in your app:
@@ -85,7 +88,7 @@ app.include_router(oauth_router)
 You now have `/auth/{provider}/login`, `/auth/{provider}/callback` and
 `/auth/logout`.
 
-`oauth-init` writes four files into your project and adds `.env` to your
+`oauthlens` writes four files into your project and adds `.env` to your
 `.gitignore` so you do not commit your client secret:
 
 | File | What it is |
@@ -206,7 +209,7 @@ Not yet. FastAPI only.
 
 ### Do I need to understand OAuth to use it?
 
-No. Run `oauth-init`, add your keys, and it works. Learn Mode is there if you
+No. Run `oauthlens`, add your keys, and it works. Learn Mode is there if you
 want to know what is happening.
 
 ---
@@ -237,7 +240,7 @@ linking. If you need those, use a maintained auth library.
 
 ## How this compares
 
-| | oauth-for-dummies | fastapi-sso | Authlib | fastapi-users |
+| | oauthlens | fastapi-sso | Authlib | fastapi-users |
 |---|---|---|---|---|
 | Main purpose | Learning, then scaffolding | Social login plugin | Full OAuth and OIDC library | User management framework |
 | Where the code lives | In your repo | In the library | In the library | In the library |
@@ -254,7 +257,7 @@ others when you want a dependency somebody else maintains.
 ## Project layout
 
 ```
-oauth_for_dummies/     the pip package, oauth-init and the scaffold templates
+oauthlens/     the pip package, the CLI and the scaffold templates
 app/                   the tutorial app: Learn Mode, settings, demo provider
 providers/             one file per provider, each carrying its own setup notes
 tests/                 82 tests

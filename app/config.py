@@ -15,7 +15,7 @@ load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 class Settings:
     """App-wide settings pulled from environment variables."""
 
-    APP_NAME: str = os.getenv("APP_NAME", "OAuth for Dummies")
+    APP_NAME: str = os.getenv("APP_NAME", "OAuthLens")
     APP_SECRET_KEY: str = os.getenv("APP_SECRET_KEY", "dev-secret-change-me")
 
     # GitHub

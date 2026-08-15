@@ -7,8 +7,8 @@ not just the ones that add features.
 ## Getting set up
 
 ```bash
-git clone https://github.com/YOUR-USERNAME/oauth-for-dummies.git
-cd oauth-for-dummies
+git clone https://github.com/YOUR-USERNAME/oauthlens.git
+cd oauthlens
 
 python -m venv venv
 source venv/bin/activate      # venv\Scripts\activate on Windows
@@ -86,7 +86,7 @@ fails against the old code, then confirm that it does. A regression test that
 passes either way is worse than none, because it looks like protection.
 
 `tests/test_scaffold_routes.py` covers the code that ships to users through
-`oauth-init`. That is the part most worth protecting.
+`oauthlens`. That is the part most worth protecting.
 
 ## Pull requests
 

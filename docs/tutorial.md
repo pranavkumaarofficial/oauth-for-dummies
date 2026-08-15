@@ -153,7 +153,7 @@ if pending is None:
 
 Both checks are needed. The cookie proves same browser. The server-side lookup
 proves the value was not invented. This is what
-`oauth_for_dummies/scaffold/oauth_routes.py` does, and there is a test asserting
+`oauthlens/scaffold/oauth_routes.py` does, and there is a test asserting
 that a state issued to one browser cannot be redeemed by another.
 
 This is not a hypothetical: fastapi-sso shipped the same class of bug and fixed
@@ -229,8 +229,8 @@ when you add it.
 ## 9. Running it
 
 ```bash
-git clone https://github.com/pranavkumaarofficial/oauth-for-dummies.git
-cd oauth-for-dummies
+git clone https://github.com/pranavkumaarofficial/oauthlens.git
+cd oauthlens
 pip install -e .
 uvicorn app.main:app --reload
 ```

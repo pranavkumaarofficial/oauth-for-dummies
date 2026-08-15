@@ -20,7 +20,7 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-SCAFFOLD_DIR = "oauth_for_dummies/scaffold"
+SCAFFOLD_DIR = "oauthlens/scaffold"
 
 FAKE_PROVIDER = {
     "client_id": "test-client-id",

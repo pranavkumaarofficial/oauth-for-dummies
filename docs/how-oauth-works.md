@@ -174,7 +174,7 @@ that the server issued the value to somebody. Binding it to a cookie is the
 simplest way to do that.
 
 This project shipped the insufficient version at first. The fix is in
-`oauth_for_dummies/scaffold/oauth_routes.py`, and there is a test asserting that
+`oauthlens/scaffold/oauth_routes.py`, and there is a test asserting that
 a state issued to one browser cannot be redeemed by another.
 
 ---

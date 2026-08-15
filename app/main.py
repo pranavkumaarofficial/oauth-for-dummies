@@ -1,5 +1,5 @@
 """
-OAuth for Dummies: Main Application
+OAuthLens: Main Application
 
 This is the entry point. Run it with:
     uvicorn app.main:app --reload

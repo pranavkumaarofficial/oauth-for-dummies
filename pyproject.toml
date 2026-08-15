@@ -3,8 +3,8 @@ requires = ["setuptools>=68.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "oauth-for-dummies"
-version = "1.1.0"
+name = "oauthlens"
+version = "2.0.0"
 description = "Learn how OAuth 2.0 works by running it, then add OAuth login to FastAPI in one command. Interactive OAuth debugger, 6 providers, PKCE."
 readme = "README.md"
 license = "MIT"
@@ -32,18 +32,19 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/pranavkumaarofficial/oauth-for-dummies"
-Repository = "https://github.com/pranavkumaarofficial/oauth-for-dummies"
-Issues = "https://github.com/pranavkumaarofficial/oauth-for-dummies/issues"
+Homepage = "https://github.com/pranavkumaarofficial/oauthlens"
+Repository = "https://github.com/pranavkumaarofficial/oauthlens"
+Issues = "https://github.com/pranavkumaarofficial/oauthlens/issues"
 
 [project.scripts]
-oauth-init = "oauth_for_dummies.cli:main"
+oauthlens = "oauthlens.cli:main"
+oauth-init = "oauthlens.cli:main"
 
 [tool.setuptools.packages.find]
-include = ["oauth_for_dummies*"]
+include = ["oauthlens*"]
 
 [tool.setuptools.package-data]
-oauth_for_dummies = ["scaffold/*"]
+oauthlens = ["scaffold/*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

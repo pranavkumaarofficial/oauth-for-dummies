@@ -1,5 +1,5 @@
 """
-oauth-for-dummies CLI, add OAuth to your FastAPI project in one command.
+oauthlens CLI, add OAuth to your FastAPI project in one command.
 
 Usage:
     oauth-init                          # scaffold with all providers
@@ -64,7 +64,8 @@ ENV_TEMPLATE = "dot_env_example"
 
 def main():
     parser = argparse.ArgumentParser(
-        prog="oauth-init",
+        # No prog= on purpose: this is installed as both `oauthlens` and
+        # `oauth-init`, so help text should name whichever one was run.
         description="Add OAuth login to your FastAPI app in one command.",
     )
     parser.add_argument(
@@ -92,7 +93,7 @@ def main():
     providers = [args.provider] if args.provider else list(PROVIDERS.keys())
 
     print()
-    print("  oauth-for-dummies")
+    print("  oauthlens")
     print("  " + "=" * 40)
     print()
 
