@@ -17,6 +17,13 @@ from pathlib import Path
 
 STORAGE_FILE = Path(__file__).resolve().parent.parent.parent / ".tokens.json"
 
+# Lifetimes, enforced server-side. A cookie's max_age is only a hint to the
+# browser: a stolen cookie replayed by a script ignores it entirely, so expiry
+# has to happen here. Unbounded growth also matters — /login is unauthenticated,
+# so without eviction anyone can grow the state table just by hitting it.
+STATE_TTL = 600      # 10 minutes to complete a login
+SESSION_TTL = 3600   # 1 hour signed in
+
 
 @dataclass
 class StoredSession:
@@ -87,14 +94,39 @@ class TokenStore:
     def __init__(self):
         self._sessions: dict[str, StoredSession] = {}
         self._states: dict[str, str] = {}  # state -> provider name
+        self._state_born: dict[str, float] = {}  # state -> created_at
         self._state_modes: dict[str, str] = {}  # state -> "learn" or "quick"
         self._code_verifiers: dict[str, str] = {}  # state -> PKCE code_verifier
         self._debug_sessions: dict[str, DebugSession] = {}
         self._learn_preflights: dict[str, dict] = {}  # state -> auth URL details
 
+    def sweep(self, now: float | None = None) -> None:
+        """Drop states and sessions that have outlived their TTL."""
+        now = time.time() if now is None else now
+
+        for state in [s for s, born in self._state_born.items() if now - born > STATE_TTL]:
+            self._forget_state(state)
+
+        for sid in [
+            s for s, sess in self._sessions.items()
+            if now - sess.created_at > SESSION_TTL
+        ]:
+            self._sessions.pop(sid, None)
+            self._debug_sessions.pop(sid, None)
+
+    def _forget_state(self, state: str) -> None:
+        """Remove every trace of a state token."""
+        self._states.pop(state, None)
+        self._state_born.pop(state, None)
+        self._state_modes.pop(state, None)
+        self._code_verifiers.pop(state, None)
+        self._learn_preflights.pop(state, None)
+
     def save_state(self, state: str, provider_name: str, mode: str = "quick", code_verifier: str | None = None) -> None:
         """Remember the state token so we can verify it on callback."""
+        self.sweep()
         self._states[state] = provider_name
+        self._state_born[state] = time.time()
         self._state_modes[state] = mode
         if code_verifier:
             self._code_verifiers[state] = code_verifier
@@ -102,9 +134,16 @@ class TokenStore:
     def verify_state(self, state: str) -> str | None:
         """
         Check if the state token is valid and return the provider name.
-        Returns None if the state is unknown (possible CSRF attack!).
+        Returns None if the state is unknown or expired (possible CSRF attack!).
+
+        Note this is only half of the check — the caller must ALSO confirm the
+        state matches the cookie set when this browser started the flow, or an
+        attacker's state can be redeemed in a victim's browser.
         """
-        return self._states.pop(state, None)
+        self.sweep()
+        provider = self._states.pop(state, None)
+        self._state_born.pop(state, None)
+        return provider
 
     def get_state_mode(self, state: str) -> str:
         """Get the mode for a state token. Returns 'quick' if not found."""
@@ -151,8 +190,14 @@ class TokenStore:
         print(f"  Session saved for {session.user_name} ({session.provider})")
 
     def get_session(self, session_id: str) -> StoredSession | None:
-        """Retrieve a session by its ID."""
-        return self._sessions.get(session_id)
+        """Retrieve a session by its ID, or None if it has expired."""
+        session = self._sessions.get(session_id)
+        if session is None:
+            return None
+        if time.time() - session.created_at > SESSION_TTL:
+            self.delete_session(session_id)
+            return None
+        return session
 
     def delete_session(self, session_id: str) -> None:
         """Delete a session (logout)."""

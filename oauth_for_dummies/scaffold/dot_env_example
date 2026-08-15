@@ -27,3 +27,8 @@ LINKEDIN_CLIENT_SECRET=""
 
 OAUTH_BASE_URL="http://localhost:8000"
 APP_SECRET_KEY="change-me-to-something-random"
+
+# Send cookies only over HTTPS. Turn this on in production.
+# Keep it off for local http://localhost — browsers don't return Secure cookies
+# over plain http, so enabling it while serving http will break login.
+COOKIE_SECURE="false"

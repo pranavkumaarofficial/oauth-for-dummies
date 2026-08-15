@@ -128,6 +128,11 @@ def main():
     else:
         print(f"  [skip] .env (already exists)")
 
+    # .env is about to hold client secrets — make sure git ignores it
+    protected = _protect_env_file(target)
+    if protected:
+        print(f"  {protected}")
+
     # Strip unused providers from config if a specific one was chosen
     if args.provider:
         _strip_unused_providers(target / "oauth_config.py", args.provider)
@@ -168,6 +173,37 @@ def main():
     print()
     print("  " + "=" * 40)
     print()
+
+
+def _protect_env_file(target: Path) -> str | None:
+    """
+    Make sure .env is gitignored before anyone puts secrets in it.
+
+    We just created a file that is about to hold OAuth client secrets. Leaving it
+    unignored is how credentials end up in public repos, so add it to .gitignore
+    (creating the file if needed). Returns a message describing what happened, or
+    None if nothing needed doing.
+    """
+    gitignore = target / ".gitignore"
+
+    if not gitignore.exists():
+        gitignore.write_text(".env\n")
+        return "[create] .gitignore (with .env)"
+
+    try:
+        content = gitignore.read_text()
+    except OSError:
+        return None
+
+    # Already covered? Accept the common spellings people actually write.
+    entries = {line.strip().rstrip("/") for line in content.splitlines()}
+    if entries & {".env", "*.env", ".env*", "**/.env"}:
+        return None
+
+    separator = "" if content.endswith("\n") or not content else "\n"
+    with gitignore.open("a") as fh:
+        fh.write(f"{separator}\n# Never commit OAuth credentials\n.env\n")
+    return "[update] .gitignore (added .env)"
 
 
 def _strip_unused_providers(config_path: Path, keep: str):

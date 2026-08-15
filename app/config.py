@@ -46,6 +46,10 @@ class Settings:
     HOST: str = os.getenv("HOST", "localhost")
     PORT: int = int(os.getenv("PORT", "8000"))
 
+    # Send cookies only over HTTPS. Off by default so http://localhost dev works;
+    # set COOKIE_SECURE=true anywhere real.
+    COOKIE_SECURE: bool = os.getenv("COOKIE_SECURE", "").lower() in ("1", "true", "yes")
+
     @property
     def base_url(self) -> str:
         return f"http://{self.HOST}:{self.PORT}"

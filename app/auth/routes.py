@@ -17,7 +17,8 @@ from fastapi import APIRouter, Request, HTTPException
 from fastapi.responses import RedirectResponse
 
 from providers.registry import get_provider
-from app.auth.storage import store, StoredSession, DebugSession
+from app.config import settings
+from app.auth.storage import store, StoredSession, DebugSession, STATE_TTL, SESSION_TTL
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -27,20 +28,25 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 # valid state can have a victim's browser redeem it, which logs the victim into
 # the attacker's account (login CSRF, RFC 6749 §10.12).
 STATE_COOKIE = "oauth_state"
-STATE_COOKIE_MAX_AGE = 600  # 10 minutes to complete a login
+
+
+def _set_cookie(response, key: str, value: str, max_age: int):
+    """Set a cookie with our standard security flags."""
+    response.set_cookie(
+        key=key,
+        value=value,
+        httponly=True,               # not readable from JavaScript
+        secure=settings.COOKIE_SECURE,
+        max_age=max_age,
+        samesite="lax",              # still sent on the provider's redirect back
+        path="/",
+    )
+    return response
 
 
 def _set_state_cookie(response, state: str):
     """Bind the pending OAuth state to this browser."""
-    response.set_cookie(
-        key=STATE_COOKIE,
-        value=state,
-        httponly=True,
-        max_age=STATE_COOKIE_MAX_AGE,
-        samesite="lax",
-        path="/",
-    )
-    return response
+    return _set_cookie(response, STATE_COOKIE, state, STATE_TTL)
 
 
 @router.get("/{provider_name}/login")
@@ -191,13 +197,7 @@ async def _handle_quick_callback(provider, provider_name: str, code: str, code_v
     print(f"\n  Login complete! Welcome, {user.name}\n")
 
     response = RedirectResponse(url="/profile", status_code=303)
-    response.set_cookie(
-        key="session_id",
-        value=session_id,
-        httponly=True,
-        max_age=3600,
-        samesite="lax",
-    )
+    _set_cookie(response, "session_id", session_id, SESSION_TTL)
     response.delete_cookie(STATE_COOKIE, path="/")
     return response
 
@@ -270,13 +270,7 @@ async def _handle_learn_callback(provider, provider_name: str, code: str, state:
     print(f"\n  Learn mode complete! Welcome, {user.name}\n")
 
     response = RedirectResponse(url=f"/learn/{provider_name}/result", status_code=303)
-    response.set_cookie(
-        key="session_id",
-        value=session_id,
-        httponly=True,
-        max_age=3600,
-        samesite="lax",
-    )
+    _set_cookie(response, "session_id", session_id, SESSION_TTL)
     response.delete_cookie(STATE_COOKIE, path="/")
     return response
 

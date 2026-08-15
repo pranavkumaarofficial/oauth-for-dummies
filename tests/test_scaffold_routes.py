@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import importlib
 import sys
+import time
 import types
 
 import httpx
@@ -32,15 +33,19 @@ FAKE_PROVIDER = {
 }
 
 
-@pytest.fixture
-def routes(monkeypatch):
-    """Import the scaffold's oauth_routes with a stubbed oauth_config."""
+def _load_scaffold_routes(monkeypatch):
+    """
+    Import the scaffold's oauth_routes.py with a stubbed oauth_config.
+
+    Loaded by path and re-executed per test, because the scaffold is written to
+    be dropped into a user's project as a top-level module, not imported as part
+    of this package. Re-executing also gives each test fresh module state.
+    """
     fake_config = types.ModuleType("oauth_config")
     fake_config.OAUTH_PROVIDERS = {"example": dict(FAKE_PROVIDER)}
     fake_config.OAUTH_BASE_URL = "http://localhost:8000"
     monkeypatch.setitem(sys.modules, "oauth_config", fake_config)
 
-    # Load oauth_routes.py from the scaffold directory by path
     spec = importlib.util.spec_from_file_location(
         "scaffold_oauth_routes", f"{SCAFFOLD_DIR}/oauth_routes.py"
     )
@@ -51,10 +56,33 @@ def routes(monkeypatch):
 
 
 @pytest.fixture
+def routes(monkeypatch):
+    # Clear COOKIE_SECURE so the suite behaves the same on every machine. The
+    # test client speaks http, and browsers (correctly) do not return Secure
+    # cookies over http — so leaving it set would break every cookie-dependent
+    # test here. The tests that care about the flag set it explicitly.
+    monkeypatch.delenv("COOKIE_SECURE", raising=False)
+    return _load_scaffold_routes(monkeypatch)
+
+
+@pytest.fixture
 def client(routes):
     app = FastAPI()
     app.include_router(routes.router)
     return TestClient(app, follow_redirects=False)
+
+
+@pytest.fixture
+def example_app(routes, monkeypatch):
+    """The generated oauth_example_app.py, wired to the loaded routes module."""
+    monkeypatch.setitem(sys.modules, "oauth_routes", routes)
+
+    spec = importlib.util.spec_from_file_location(
+        "scaffold_example_app", f"{SCAFFOLD_DIR}/oauth_example_app.py"
+    )
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module.app
 
 
 # ---------------------------------------------------------------------------
@@ -242,8 +270,178 @@ class TestTokenErrors:
 
 
 # ---------------------------------------------------------------------------
+# End to end — a full successful login through the generated app
+# ---------------------------------------------------------------------------
+
+class TestFullLoginFlow:
+    """
+    Drive the whole scaffold the way a user's browser would: login redirect,
+    callback, session cookie, profile page, logout. Every other test here checks
+    a failure path, so this is the one proving the happy path still works.
+    """
+
+    def test_login_redirects_to_provider_with_correct_params(self, client):
+        resp = client.get("/auth/example/login")
+        location = resp.headers["location"]
+
+        assert location.startswith("https://example.test/authorize?")
+        assert "client_id=test-client-id" in location
+        assert "response_type=code" in location
+        assert "redirect_uri=http%3A%2F%2Flocalhost%3A8000%2Fauth%2Fexample%2Fcallback" in location
+
+    def test_successful_login_creates_session_and_renders_profile(self, example_app, routes, monkeypatch):
+        _stub_full_flow(monkeypatch, routes, user={"id": 7, "name": "Ada Lovelace"})
+        browser = TestClient(example_app, follow_redirects=False)
+
+        # 1. start the flow
+        login = browser.get("/auth/example/login")
+        state = login.cookies[routes.STATE_COOKIE]
+
+        # 2. the provider redirects back
+        callback = browser.get(f"/auth/example/callback?code=good-code&state={state}")
+        assert callback.status_code == 303
+        assert callback.headers["location"] == "/profile"
+        assert "session_id" in callback.cookies
+
+        # 3. the session works
+        profile = browser.get("/profile")
+        assert profile.status_code == 200
+        assert "Ada Lovelace" in profile.text
+
+        # 4. logout clears it
+        browser.get("/auth/logout")
+        assert browser.get("/profile").status_code == 401
+
+    def test_hostile_display_name_is_escaped_not_executed(self, example_app, routes, monkeypatch):
+        """
+        A provider display name is attacker-controlled. It must render as text.
+        """
+        payload = '<img src=x onerror="alert(1)">'
+        _stub_full_flow(monkeypatch, routes, user={"id": 1, "name": payload})
+        browser = TestClient(example_app, follow_redirects=False)
+
+        login = browser.get("/auth/example/login")
+        state = login.cookies[routes.STATE_COOKIE]
+        browser.get(f"/auth/example/callback?code=good-code&state={state}")
+
+        profile = browser.get("/profile")
+
+        assert "<img src=x" not in profile.text      # no live tag
+        assert "&lt;img src=x" in profile.text        # rendered as text
+        assert 'onerror="alert(1)"' not in profile.text
+
+    def test_profile_requires_a_session(self, example_app):
+        assert TestClient(example_app).get("/profile").status_code == 401
+
+
+# ---------------------------------------------------------------------------
+# Expiry — enforced server-side, not via cookie max_age
+# ---------------------------------------------------------------------------
+
+class TestExpiry:
+    def test_expired_state_cannot_be_redeemed(self, client, routes):
+        login = client.get("/auth/example/login")
+        state = login.cookies[routes.STATE_COOKIE]
+
+        # Age the pending state past its TTL
+        provider, born = routes._pending_states[state]
+        routes._pending_states[state] = (provider, born - routes.STATE_TTL - 1)
+
+        resp = client.get(f"/auth/example/callback?code=abc&state={state}")
+
+        assert resp.status_code == 400
+        assert "invalid state" in resp.json()["detail"].lower()
+
+    def test_sweep_evicts_expired_states(self, routes):
+        now = 1_000_000.0
+        routes._pending_states.clear()
+        routes._pending_states["fresh"] = ("example", now)
+        routes._pending_states["stale"] = ("example", now - routes.STATE_TTL - 1)
+        routes._code_verifiers["stale"] = "verifier-for-stale"
+
+        routes._sweep(now=now)
+
+        assert "fresh" in routes._pending_states
+        assert "stale" not in routes._pending_states
+        # the PKCE verifier must not be left behind
+        assert "stale" not in routes._code_verifiers
+
+    def test_unauthenticated_logins_do_not_grow_state_table(self, client, routes):
+        """
+        /login is unauthenticated. Without eviction it's an unbounded-memory DoS.
+        """
+        routes._pending_states.clear()
+        for _ in range(20):
+            client.get("/auth/example/login")
+        assert len(routes._pending_states) == 20
+
+        # Age everything, then one more login should sweep the lot
+        aged = {s: (p, born - routes.STATE_TTL - 1) for s, (p, born) in routes._pending_states.items()}
+        routes._pending_states.update(aged)
+        client.get("/auth/example/login")
+
+        assert len(routes._pending_states) == 1
+
+    def test_expired_session_is_not_returned(self, routes):
+        """A leaked cookie must stop working, whatever max_age the browser saw."""
+        request = _fake_request({"session_id": "sid"})
+
+        routes._sessions["sid"] = ({"name": "Alice"}, time.time())
+        assert routes.get_session(request)["name"] == "Alice"
+
+        routes._sessions["sid"] = ({"name": "Alice"}, time.time() - routes.SESSION_TTL - 1)
+        assert routes.get_session(request) is None
+        assert "sid" not in routes._sessions  # and it's evicted
+
+
+# ---------------------------------------------------------------------------
+# Cookie flags
+# ---------------------------------------------------------------------------
+
+class TestCookieFlags:
+    def test_state_cookie_is_httponly_and_lax(self, client, routes):
+        resp = client.get("/auth/example/login")
+        header = resp.headers["set-cookie"]
+
+        assert "HttpOnly" in header
+        assert "lax" in header.lower()
+
+    def test_secure_flag_off_by_default_for_localhost(self, monkeypatch):
+        """Must default off, or http://localhost dev silently loses its cookies."""
+        monkeypatch.delenv("COOKIE_SECURE", raising=False)
+        module = _load_scaffold_routes(monkeypatch)
+
+        app = FastAPI()
+        app.include_router(module.router)
+        resp = TestClient(app, follow_redirects=False).get("/auth/example/login")
+
+        assert module.COOKIE_SECURE is False
+        assert "Secure" not in resp.headers["set-cookie"]
+
+    def test_secure_flag_set_when_env_var_enabled(self, monkeypatch):
+        """COOKIE_SECURE=true must actually reach the Set-Cookie header."""
+        monkeypatch.setenv("COOKIE_SECURE", "true")
+        module = _load_scaffold_routes(monkeypatch)
+
+        app = FastAPI()
+        app.include_router(module.router)
+        resp = TestClient(app, follow_redirects=False).get("/auth/example/login")
+
+        assert module.COOKIE_SECURE is True
+        assert "Secure" in resp.headers["set-cookie"]
+
+
+# ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
+class _FakeRequest:
+    def __init__(self, cookies):
+        self.cookies = cookies
+
+
+def _fake_request(cookies: dict):
+    return _FakeRequest(cookies)
 
 def _install_transport(monkeypatch, routes, handler):
     """Route all httpx calls made by the scaffold through a mock transport."""
@@ -269,6 +467,16 @@ def _stub_token_error(monkeypatch, routes, error: str = "invalid_grant", descrip
     if description:
         payload["error_description"] = description
     _stub_token_response(monkeypatch, routes, payload)
+
+
+def _stub_full_flow(monkeypatch, routes, user: dict):
+    """Mock a provider that answers both the token and userinfo calls."""
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.url.path.endswith("/token"):
+            return httpx.Response(200, json={"access_token": "tok", "token_type": "bearer"})
+        return httpx.Response(200, json=user)
+
+    _install_transport(monkeypatch, routes, handler)
 
 
 def _capture_token_request(monkeypatch, routes) -> dict:

@@ -14,7 +14,9 @@ from __future__ import annotations
 
 import hashlib
 import base64
+import os
 import secrets
+import time
 from urllib.parse import urlencode
 
 import httpx
@@ -25,17 +27,31 @@ from oauth_config import OAUTH_PROVIDERS, OAUTH_BASE_URL
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
-# In-memory state + session storage (swap for Redis/DB in production)
-_pending_states: dict[str, str] = {}
-_code_verifiers: dict[str, str] = {}  # PKCE: state -> code_verifier
-_sessions: dict[str, dict] = {}
+# In-memory state + session storage (swap for Redis/DB in production).
+# Each entry carries the time it was created so it can be expired — see _sweep().
+_pending_states: dict[str, tuple[str, float]] = {}   # state -> (provider, created_at)
+_code_verifiers: dict[str, str] = {}                  # PKCE: state -> code_verifier
+_sessions: dict[str, tuple[dict, float]] = {}         # session_id -> (user, created_at)
 
 # The state token is ALSO stored in this cookie, so we can prove that the browser
 # finishing the flow is the same one that started it. Without this, anyone who
 # obtains a valid state can have it redeemed by someone else's browser — that's
 # login CSRF, and it lets an attacker log a victim into the attacker's account.
 STATE_COOKIE = "oauth_state"
-STATE_COOKIE_MAX_AGE = 600  # 10 minutes to complete a login
+
+# Lifetimes, enforced SERVER-side. A cookie's max_age is only a hint to the
+# browser — anyone replaying a stolen cookie simply ignores it — so the server
+# has to do the expiring itself.
+STATE_TTL = 600      # 10 minutes to complete a login
+SESSION_TTL = 3600   # 1 hour signed in
+
+# Send cookies only over HTTPS. Set COOKIE_SECURE=true in production.
+#
+# Leave it OFF for local http://localhost development. Browsers do not send
+# Secure cookies over plain http, so turning this on while serving http makes
+# the state cookie never come back — logins then fail with "State did not match
+# this browser's login attempt", which looks like a bug but is the flag working.
+COOKIE_SECURE = os.getenv("COOKIE_SECURE", "").lower() in ("1", "true", "yes")
 
 # Providers that support/require PKCE (add provider keys here to enable).
 # NOTE: PKCE is sent *in addition to* client_secret. It does not replace it.
@@ -45,6 +61,43 @@ PKCE_PROVIDERS: set[str] = set()
 # Only these skip client_secret at the token endpoint. Most web apps are
 # confidential clients and must keep sending the secret, even with PKCE enabled.
 PUBLIC_CLIENTS: set[str] = set()
+
+
+# ---- Expiry ----
+
+def _sweep(now: float | None = None) -> None:
+    """
+    Drop expired states and sessions.
+
+    Called on every login and callback. Two reasons this matters:
+
+      * /login is unauthenticated, so without eviction anyone can grow
+        _pending_states without limit just by hitting it in a loop.
+      * a session cookie that leaks stays valid forever if the server never
+        expires it, no matter what max_age the browser was told.
+    """
+    now = time.time() if now is None else now
+
+    for state in [s for s, (_, born) in _pending_states.items() if now - born > STATE_TTL]:
+        _pending_states.pop(state, None)
+        _code_verifiers.pop(state, None)
+
+    for sid in [s for s, (_, born) in _sessions.items() if now - born > SESSION_TTL]:
+        _sessions.pop(sid, None)
+
+
+def _set_cookie(response, key: str, value: str, max_age: int, path: str = "/"):
+    """Set a cookie with our standard security flags."""
+    response.set_cookie(
+        key=key,
+        value=value,
+        httponly=True,      # not readable from JavaScript
+        secure=COOKIE_SECURE,
+        max_age=max_age,
+        samesite="lax",     # still sent on the provider's top-level redirect back
+        path=path,
+    )
+    return response
 
 
 # ---- PKCE helpers ----
@@ -214,9 +267,18 @@ def _normalize_user(provider: str, raw: dict, access_token: str | None = None) -
 def get_session(request: Request) -> dict | None:
     """Get the current user session from the request cookie."""
     session_id = request.cookies.get("session_id")
-    if session_id:
-        return _sessions.get(session_id)
-    return None
+    if not session_id:
+        return None
+
+    entry = _sessions.get(session_id)
+    if entry is None:
+        return None
+
+    user, created_at = entry
+    if time.time() - created_at > SESSION_TTL:
+        _sessions.pop(session_id, None)
+        return None
+    return user
 
 
 @router.get("/{provider}/login")
@@ -226,8 +288,10 @@ async def login(provider: str):
     if not config:
         raise HTTPException(status_code=404, detail=f"Unknown provider: {provider}")
 
+    _sweep()
+
     state = secrets.token_urlsafe(32)
-    _pending_states[state] = provider
+    _pending_states[state] = (provider, time.time())
 
     params = {
         "client_id": config["client_id"],
@@ -248,15 +312,7 @@ async def login(provider: str):
     # Bind the state to THIS browser. The callback requires the cookie to match
     # the state in the query string, so a state captured by an attacker cannot
     # be redeemed in a victim's browser.
-    response.set_cookie(
-        key=STATE_COOKIE,
-        value=state,
-        httponly=True,
-        max_age=STATE_COOKIE_MAX_AGE,
-        samesite="lax",
-        path="/auth",
-    )
-    return response
+    return _set_cookie(response, STATE_COOKIE, state, STATE_TTL, path="/auth")
 
 
 @router.get("/{provider}/callback")
@@ -273,8 +329,10 @@ async def callback(request: Request, provider: str, code: str = "", state: str =
             detail="State did not match this browser's login attempt. Try logging in again.",
         )
 
-    saved_provider = _pending_states.pop(state, None)
-    if saved_provider is None or saved_provider != provider:
+    _sweep()  # an expired state must not be redeemable
+
+    pending = _pending_states.pop(state, None)
+    if pending is None or pending[0] != provider:
         _code_verifiers.pop(state, None)
         raise HTTPException(status_code=400, detail="Invalid state. Try logging in again.")
 
@@ -333,16 +391,10 @@ async def callback(request: Request, provider: str, code: str = "", state: str =
 
     # Create session
     session_id = secrets.token_urlsafe(32)
-    _sessions[session_id] = user
+    _sessions[session_id] = (user, time.time())
 
     response = RedirectResponse(url="/profile", status_code=303)
-    response.set_cookie(
-        key="session_id",
-        value=session_id,
-        httponly=True,
-        max_age=3600,
-        samesite="lax",
-    )
+    _set_cookie(response, "session_id", session_id, SESSION_TTL)
     # The state cookie has done its job
     response.delete_cookie(STATE_COOKIE, path="/auth")
     return response
